@@ -1,0 +1,219 @@
+%-----------------------------------------------------------------------------------------------
+%		Design der Umsetzung
+%-----------------------------------------------------------------------------------------------
+
+\chapter{Design der Umsetzung}
+\label{sec:Grundkonzepte1}
+
+Hier wird das Grob-Design des Generators definiert und einige Implementierungsfragen geklärt.
+
+\section{Grundlegende Designentscheidungen}
+\label{sec:GenerierungsprozessGR}
+
+Unter grundlegenden Designentscheidungen sind Richtungsvorgaben für die Architektur der Anwendung zu verstehen, die nach Fertigstellung der ersten stable Version vermutlich nur mit sehr hohem Aufwand rückgängig gemacht werden können bzw. bei grundlegenden Änderungen aufwändige Migrationen und Regressionstests erforderlich machen. D.h. natürlich nicht, dass keine der Entscheidungen nicht doch in Folgeversionen revidiert werden kann.
+
+\begin{longtable}{|p{0.4\textwidth}|p{0.4\textwidth}|}
+	\hline
+   	\textbf{Designentscheidung} & \textbf{Begründung} \\
+	\endhead
+	\hline
+	 Als technische Plattform für die Umsetzung wird Java 8 SE verwendet. & TBD \\
+	\hline
+	 Verwendung der Hibernate JARs für die JPA API. & TBD \\
+	\hline
+	 Verwendung von Maven (3.2.1) für den Build-Prozess. & TBD \\
+	\hline
+	 Verwendung von Eclipse (4.4) und M2E plugin als IDE. & TBD \\
+	\hline
+	 Keine Anpassung bereits generierter Artefakte möglich & TBD \\
+	\hline
+	\caption{Grundlegende Designentscheidungen für Version \TOGenVersion{}}
+	\label{tab:VordDEFTEKonfigZZ}
+\end{longtable}
+
+\section{Generierungsprozess}
+\label{sec:Generierungsprozess}
+
+
+\subsection{Phasen}
+\label{sec:Phasen}
+
+Der Generierungsprozess kann in folgende Phasen unterteilt werden:
+\begin{enumerate}
+	\item \emph{Einlesen der Konfiguration:} Auffinden, einlesen und Validieren der Konfigurations-Properties und der benutzerdefinierten Template-Variablen.
+	\item \emph{Parsen der Templates:} Einlesen, Parsen und Validieren der verwendeten Templates. Die Informationen aus den Templates werden in eine interne Repräsentation überführt, welche das spätere Expandieren ermöglicht.
+	\item \emph{Parsen der Entitäten:} Einlesen, Parsen und Validieren der Quell-Entitäten. Die Informationen aus den Quell-Entitäten werden extrahiert und in eine für das spätere Expandieren sinnvolle Repräsentation überführt.
+	\item \emph{Expandieren der Templates:} Die Templates werden je Scope mit den entsprechenden Inhalten gefüllt.
+	\item \emph{Finalisierung Generierungsprozess:} Der Generierungsprozess wird zum Abschluss gebracht: Ressourcen werden freigegeben, die finalen Java-Klassen werden geschrieben.
+\end{enumerate}
+
+\subsection{Potentielle Parallelisierung}
+\label{sec:PotentiellePhasen}
+
+Prinzipiell müssen die Phasen nicht vollständig sequentiell ablaufen. Es besteht folgendes Potential für Parallelisierung, um die Generierung der Ziel-Klassen bei vielen Templates und vielen Quell-Entitäten zu beschleunigen:
+\begin{itemize}
+	\item Das Einlesen der Konfiguration ist Voraussetzung für alle anderen Schritte und wegen der überschaubaren Anzahl an Properties i.d.R. nicht langlaufend. Einzig das Bestimmen aller Dateien und Packages bei Verwendung von Wildcards erfordert Dateisystemzugriffe. Daher muss diese Phase vollständig und erfolgreich abgeschlossen sein, damit die Folge-Phasen starten können.
+	\item Parsen der Templates und das Parsen der Entitäten sind völlig unabhängig voneinander und können so potentiell parallel durchgeführt werden. Dabei erfordern beide lesende Dateisystemzugriffe. Bei den Entitäten ist dies auf das initiale Laden der Entitäts-Klassen beschränkt. Dieses Laden \emph{aller Entitäts-Klassen} kann ggf. bewusst vor allen anderen Parse-Schritten durchgeführt werden. Nachdem alle Entitäts-Klassen geladen sind, wird mit dem Parsen der ersten Entitätsklasse begonnen. Das Parsen der Entitäten selbst kann bereits in mehreren Threads erfolgen, wobei eine Entität selbst nur wenig Zeit für das Parsen benötigt. Mehrere Threads sollten hier nur dann erzeugt werden, wenn eine gewisse Minimalzahl an Entitäten erreicht ist, und dann sollte aus einer möglichst geringen Anzahl Threads je ein Thread einen Block von N Entitäten nacheinander abarbeiten. Diese Parallelisierung ist aber im Hinblick auf möglicherweise später hinzuzufügende Aktivitäten wegen JPA-Relationen vorsichtig zu designen. Parallel zum Parsen der Entitäten kann bereits das Lesen der Templates in einem weiteren Thread starten. Dieses Lesen sollte in nur einem Thread erfolgen. Das nachfolgende Aufbereiten der Templates (ohne I/O) sollte ebenso nur in einem Thread erfolgen, da nicht mit einer enormen Anzahl an Templates zu rechnen ist (in aller Regel 3 bis maximal 10 Templates).
+	\item Je nach Scope eines Templates kann dessen Expandierung bereits dann erfolgen, wenn es fertig geparst ist, und bevor alle Entitäten geparst worden sind. Dies geht genau dann, wenn das Template selbst Scope \texttt{global} oder \texttt{subsystem} hat, und kein darin verwendeter Repeat-Block einen Scope kleiner als \texttt{subsystem} hat.
+	\item Auch das finale Schreiben der Ziel-Java-Klassen kann bereits während des Parsens der Entitäten mit den im letzten Punkt genannten Einschränkungen erfolgen.
+\end{itemize}
+
+\section{Einlesen der Konfiguration}
+\label{sec:EinlesenVonProperties}
+
+Das Einlesen der Konfiguration kann nochmals in folgende Unterschritte gegliedert werden:
+\begin{itemize}
+	\item Bestimmen der Konfigurations-Quelle
+	\item Parsen und validieren aller Konfigurations-Properties
+	\item Parsen und validieren aller benutzerdefinierten Template-Variablen
+\end{itemize}
+
+Alle Schritte der Phase 1 werden von einer Klasse \texttt{ConfigPropertyPhaseHandler} umgesetzt. Diese hat darüber hinaus die folgenden Verantwortlichkeiten:
+\begin{itemize}
+	\item Verwalten aller verfügbaren Konfigurations-Properties
+	\item Verwalten der für die Konfigurations-Properties vorhandenen Konfigurations-Werte
+	\item Fehlerbehandlung für Fehler, die bei den oben genannten Schritten auftreten
+\end{itemize}
+
+\subsection{Bestimmen der Konfigurations-Quelle}
+\label{sec:BestimmenDerKonfigurationsQuelle}
+
+TBD
+
+\subsection{Parsen und validieren aller Konfigurations-Properties}
+\label{sec:ParsenUndValidierenAllerKonfigurationsProperties}
+
+\subsubsection{Eigenschaften von Konfigurations-Properties}
+\label{sec:EigenschaftenVonKonfigurationsProperties}
+
+Wir hatten weiter oben die folgenden Typen von Konfigurations-Properties identifiziert: Pfad-Angaben, Package-Angaben, sonstiges. Zudem wurde zwischen atomaren und mehrwertigen Properties unterschieden. Bei Pfad- und Package-Angaben sind noch Wildcards möglich. Zudem kann eine Konfigurations-Property optional oder verpflichtend sein. All diese Eigenschaften können in einer Klasse \texttt{ConfigPropertyDesc} zusammengefasst werden:
+\begin{itemize}
+	\item name: String
+	\item optional: boolean
+	\item wildcardsAllowed: boolean
+	\item isMultiValued: boolean
+	\item defaultValue: String
+	\item type: PATH\verb^|^PACKAGE\verb^|^OTHER
+\end{itemize}
+
+Je konkret definierter Konfigurations-Property (siehe Tabellen \ref{tab:VordDEFTEKonfig} und \ref{tab:VordDEFTEKonfigZ}) gibt es dann eine Instanz der Klasse \texttt{ConfigPropertyDesc}.
+
+\subsubsection{Zieltypen des Parse-Vorganges}
+\label{sec:EigenschaftenVonKonfigurationsProperties2}
+
+Was sind die konkret zu verwendenden Datentypen in \texttt{ConfigPropertyDesc}, also die konvertierten Zieldatentypen? Es macht Sinn, für alle Properties mit isMultiValued=true eine \verb|List<T>| zu verwenden, und für solche mit isMultiValued=false eben T. Wofür steht im Einzelnen T?
+\begin{itemize}
+	\item Für Konfigurations-Properties, die weder den Typ PATH oder PACKAGE haben, kommt nur String (isMultiValued=false) und \verb|List<String>| (isMultiValued=true) in Frage. Defacto findet also außer einem Splitten bei multivalued keine Konvertierung statt. 
+	\item Für Pfad-Angaben gibt es mehrere Alternativen: \texttt{java.io.File} (kann sowohl Dateien als auch Verzeichnisse repräsentieren), String oder java.io.Path (neu mit JavaSE 1.7). Wir gehen der Reihe nach auf die Typen ein:
+	\begin{itemize}
+		\item String ist zu primitiv, da weitere Verarbeitungsschritte bereits mindestens ein File benötigen, z.B. um Verzeichnisse zu erzeugen, Existenz zu prüfen etc.
+		\item Path bietet erweiterte und bequeme Funktionen. Allein für die Weiterverarbeitung nach dem Abholen der Property-Werte ist Path nicht unbedingt notwendig, sondern das Zurückliefern eines Files ist ausreichend. Sollten später Path-Funktionen benötigt werden, kann einen Umwandlung in einen Path nach wie vor erfolgen. Die neuen nio-Funktionen auf Paths mit glob-Syntax (einer recht mächtigen Unix-Wildcard-Syntax für Pfadangaben) mit Java 1.7 klingen zuerst vielversprechend, nützen uns aber leider wenig:
+		\begin{itemize}
+			\item \texttt{FileSystem.getPathMatcher()} wäre mit seiner glob-Syntax fast ideal geeignet, um Pfade mit Wildcards zu implementieren. Der zurückgelieferte PathMatcher als solcher ist aber wenig nützlich. Seine direkte Verwendung würde jedoch erfordern, alle Pfade unter dem letzten Pfad-Segment rekursiv zu iterieren, um dann mit PathMatcher.matches() zu prüfen, ob der Pfad vom Pattern abgedeckt wird. Sehr ineffizient. Eine andere Verwendung scheint es für diesen PathMatcher leider gar nicht zu geben (es gibt keine Methode, die einen PathMatcher akzeptieren würde).
+			\item Mit \texttt{Files.newDirectoryStream()} scheint es eine perfekte Lösung zu geben: Diese Funktion nimmt einen Path und einen glob. Dann kann man über alle Pfade iterieren, die unter dem Start-Pfad dem glob entsprechen. Leider liefert diese aber tätsächlich nur alle Pfade direkt unter dem Start-Pfad, z.B. alle Dateien mit der Endung .java. Rekursive globs wie **/*.java funktionieren nicht.
+		\end{itemize}
+	 \item Bleibt noch java.io.File. Da die Funktionalität von Path nicht weiterhilft bzw. nicht benötigt wird, kann diese Klasse für die Repräsentation von Dateien und Verzeichnissen genutzt werden.
+	\end{itemize}
+  \item Auch für Package-Angaben gibt es mehrere Alternativen, die wir der Reihe nach vorstellen:
+	\begin{itemize}
+	  \item Die Klasse java.reflect.Package kommt nicht in Frage: Sie wird weder für das spätere Einlesen von Entitätsklassen benötigt (denn es gibt keine Methoden wie "`getAllClassesInPackage"' o.ä.) noch für die Klärung, ob das Package existiert oder nicht.
+		\item Wieder kommt eine String-Repräsentation wie "`org.de.package"' in Frage. Diese ist für die Weiterverarbeitung jedoch nicht sonderlich nützlich. Denn es müssen letztlich alle Java-Klassen im Package gefunden werden, was nur mit Dateisystemmitteln erreichbar ist. Dennoch wird die String-Repräsentation \emph{auch} benötigt: Nämlich dann, wenn die Zielklasse geladen werden soll. Somit führen wir eine neue Klasse \texttt{PackageDesc} ein, welche den vollqualifizierten Dateipfad des Packages enthält sowie den Package-Namen.
+	\end{itemize}
+\end{itemize}
+
+\subsubsection{Lösungsvariante 1: Parser- und Description-Hierarchie}
+\label{sec:EigenschaftenVonKonfigurationsProperties1}
+
+Das Parsen der properties ist von den Dimensionen type, isMultiValued und wildcardsAllowed abhängig. Die in Rohform als Strings vorhandenen Konfigurationswerte müssen im Verlaufe des Parsens letztlich in Zieldatentypen umgewandelt werden, die für die weitere Verarbeitung am geeignetsten sind. Daher ist es sinnvoll, \texttt{ConfigPropertyPhaseHandler} bereits umgewandelte Datentypen liefern zu lassen. Die Umwandlung in Datentypen schließt bereits ein Parsen und Validieren mit ein. Eine mögliche Design-Lösung besteht in Folgendem:
+\begin{itemize}
+	\item Statt eines type-Attributes in \texttt{ConfigPropertyDesc} kann ein generischer Typ-Parameter T verwendet werden
+	\item Da das Parsen und Validieren stark vom type abhängig, macht es Sinn, dies in spezifischen Klassen zu kapseln
+	\item Als Basisklasse kann man einen \texttt{AbstractConfigPropertyParser} definieren, der einige Gemeinsamkeiten sowie abstrakte Methoden für Teilschritte des Parsens anbietet. Diese Klasse wird je type von einer konkreten Parser-Klasse erweitert.
+	\item Der Parser muss die \texttt{ConfigPropertyDesc} kennen, für die er parst (die Informationen daraus sind für den Parse- und Validierungsvorgang erforderlich).
+	\item Die Abfrage von Konfigurations-Property-Werten soll idealerweise ohne Casts auskommen. Um dies zu erreichen, sind folgende Designanpassungen notwendig:
+	\begin{itemize}
+		\item Man macht \texttt{ConfigPropertyDesc} zu einer abstrakten generischen Klasse \texttt{AbstractConfigPropertyDesc}. Je konkreter Kombination von type und isMultiValued definiert man eine von \texttt{AbstractConfigPropertyDesc} abgeleiteten Klasse, also z.B. eine für PATH und multivaled=true, eine andere für PATH und multivalued=false. In diesen abgeleiteten Klasse kann man dann auch spezifische Eigenschaften definieren, die nur für diesen Typ von Konfigurations-Property relevant sind.
+		\item Zudem muss dann jede \texttt{AbstractConfigPropertyDesc} eine Instanz des zugehörigen Parsers erzeugen können. Auch dieser ist generisch.
+		\item Dann kann man eine get-Methode in \texttt{ConfigPropertyPhaseHandler} definieren, welche dazu dient, zu einer gegebenen Instanz des Typs \texttt{AbstractConfigPropertyDesc} den jeweiligen (bereits geparsten, validierten und konvertierten) Wert aus der Konfiguration zurückzuliefern.
+		\item Diese Methode erzeugt den Parser, parst, validiert, loggt das Ergebnis und schmeißt ggf. eine Exception. Die geparsten Werte können in einen Cache geschrieben werden, sodass dieser Prozess nur beim ersten Abfragen (lazy) passiert. Diese Methode kann typsicher implementiert werden, wobei im Fall von Caching zumindest eine "`unchecked"' conversion in Java notwendig ist, da der Cache üblicherweise in Form einer Map implementiert wird, die dann gezwungenermaßen mit Wildcards definiert sein muss, da sie unterschiedliche konkrete \texttt{AbstractConfigPropertyDesc} mit unterschiedlichsten konkreten Typ-Argumenten speichern muss.
+	\end{itemize}
+\end{itemize}
+
+Zusammengefasst sieht das Design in Form eines Klassendiagramms so aus:
+
+TBD
+
+Hier ist ersichtlich:
+
+\begin{itemize}
+	\item Jede Parserklasse speichert sowohl den Rohwert der Property als String, als auch den geparsten Wert des generischen Typs T, als auch Validierungs-Informationen in Form einer Instanz von \texttt{PropertyValidationResult}. Dies kann später für das Logging der entsprechenden Validierungs-Fehler und Warnungen genutzt werdne.
+	\item Die Methoden parse() und validate() sind in der abstrakten Basisklasse implementiert und führen einige Basisschritte des Parsings und der Validierung durch, sie delegieren dann an protected extended Methoden, die in der abgeleiteten Klasse implementiert werden müssen.
+\end{itemize}
+
+\subsubsection{Lösungsvariante 2: Nur stateless Parser-Hierarchie}
+\label{sec:EigenschaftenVonKonfigurationsProperties2}
+
+An Lösungsvorschlag 1 fällt die duplizierte Hierarchie auf, sowie, dass die Parser den Zustand (Rohwert und konvertierten Wert) halten. Somit ist ein Parser-Instanz je Property notwendig. Dies fällt Performance-technisch natürlich aufgrund der geringen Anzahl an Objekte nicht ins Gewicht. Das Ziel jedoch, Casts beim Lesen der konvertierten Zieldaten zu vermeiden, kann auch einfacher erreicht werden.
+
+Lösungsvariante 2 besteht aus folgendem:
+
+\begin{itemize}
+	\item Aus \texttt{AbstractConfigPropertyDesc} wird die generische Klasse \texttt{ConfigProperty}, die nun nicht mehr nur die Eigenschaften einer Property repräsentiert, sondern auch deren (Roh- und geparsten Ziel-) Wert enthät. Dieser kann dann direkt mit einem getter gelesen werden, der den generischen Typ als Rückgabetyp hat.
+	\item Die Klasse ist nicht mehr abstrakt und hat keine abgeleiteten Klassen mehr. Die Unterschiede zwischen den Property-Typen werden ausschließlich durch die Parser-Klassenhierarchie implementiert. Die Klasse muss dazu eine Parser-Instanz im Konstruktor übergeben bekommen.
+	\item Zudem hat sie eine Methode parseAndValidate, die den gelesenen Rohwert erhält. Diese ruft nacheinander parse() und dann validate() auf dem Parser auf.
+	\item Parserhierarchie und -Methoden entsprechen weitgehend denen in Lösungsvariante 1, nur dass die Parser nun stateless sind und daher alle Werte (inkl. die ConfigProperty selbst) als Parameter erhalten.
+\end{itemize}
+
+Hier das zugehörige Klassendiagramm:
+
+TBD
+
+Dieses Design reduziert die Klassenanzahl deutlich und ist dabei noch flexibler einsetzbar. Es bekommt daher den Vorrang.
+
+\subsubsection{Hinweise zur Implementierung des Parsens}
+\label{sec:EigenschaftenVonKonfigurationsProperties4}
+
+Das Parsen der Konfigurations-Property-Werte wird durch Wildcards zu einer recht komplexen Aufgabe. Die folgende Tabelle fasst einige Hinweise zusammen, die für die Implementierung des Parsens relevant sind:
+
+\begin{longtable}{|p{0.2\textwidth}|p{0.7\textwidth}|}
+	\hline
+   	\textbf{Typ} & \textbf{Hinweise zum Parsen und Validieren} \\
+	\endhead
+	\hline
+	 String, atomar & Trivial \\
+	\hline
+	 String, multivalued & Trivial: Nur split \\
+	\hline
+	 Pfad, atomar & Trivial: Nur Prüfung auf Existenz \\
+	\hline
+	 Pfad, multivalued, keine Wildcards & Trivial: Nur split und Prüfung auf Existenz \\
+	\hline
+	 Pfad, multivalued, Wildcards & Split, effizientes Spazieren durchs Dateisystem und Prüfung auf Existenz \\
+	\hline
+	 Package, atomar & Trivial: Nur Prüfung auf Existenz \\
+	\hline
+	 Package, multivalued, keine Wildcards & Kann Implementierung für Pfad weitegehend wiederverwenden, siehe dort \\
+	\hline
+	 Package, multivalued, Wildcards & Kann Implementierung für Pfad weitegehend wiederverwenden, siehe dort \\
+	\hline
+	\caption{Implementierungshinweise für Parsen und Validieren}
+	\label{tab:VordDEFTEKonfigZZ}
+\end{longtable}
+
+\subsection{Parsen und validieren aller benutzerdefinierten Template-Variablen}
+\label{sec:ParsenUndValidierenAllerBenutzerdefiniertenTemplateVariablen}
+
+\section{Parsen der Templates}
+\label{sec:ParsenDerTemplates}
+
+
+\section{Parsen der Entitäten}
+\label{sec:ParsenDerEntitaeten}
+
+
+\section{Expandieren der Templates}
+\label{sec:ExpandierenDerTemplates}
+
+
+\section{Logging}
+\label{sec:Logging}

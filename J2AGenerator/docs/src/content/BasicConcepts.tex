@@ -1,0 +1,340 @@
+%-----------------------------------------------------------------------------------------------
+%		Grundkonzepte
+%-----------------------------------------------------------------------------------------------
+
+\chapter{Grundkonzepte}
+\label{sec:Grundkonzepte}
+
+Hier werden die Grundkonzepte des Generators beschrieben.
+
+\section{Entities}
+\label{sec:Entities}
+
+Der Generator arbeitet auf Basis von JPA-Entities. JPA-Entities sind Java-Klassen, die mit der Annotation @javax.persistence.Entity annotiert worden sind und weiteren Regeln entsprechen, siehe dazu \cite{JPA21}[JPA21]. Eingabe des Generators sind 0 bis n Entitäten. Der Generator bearbeitet die Entitäten sequentiell (die Reihenfolge der Abarbeitung ist nicht definiert) und liest aus jeder Entität relevante Informationen aus. Diese Informationen werden dann benutzt, um auf Basis gegebener Templates Ziel-Javaklassen zu generiern. Die Quell-Entitäten werden bei diesem Prozess nicht verändert.
+
+Details zu JPA werden hier nicht erläutert, sondern als bekannt vorausgesetzt. Siehe \cite{JPA21}[JPA21] sowie \cite{J2EEDocs}[J2EEDocs].
+
+\section{Templates}
+\label{sec:Templates}
+
+Ein \textbf{Template} ist eine Text-Datei, die den (Pseudo-)Code einer Java-Klasse enthält. Das Template wird während des Generierungsprozesses geparst, nach bestimmten Kriterien wird eine Kopie des Templates angelegt, und diese auf Basis der gelesenen Quell-Entitäten mit Informationen angereichert. Dieser Prozess wird \textbf{Expansion} genannt. Resultat der Expansion eines Templates sind im Idealfall\footnote{Wie später erläutert wird, kann es sein, dass nicht alle Template-Variablen während der Expansion ersetzt werden konnten, sodass Syntaxfehler in der generierten Java-Klasse die Folge sind.} 0 bis N  kompilierende Java-Klassen, oder zumindest 0 bis N syntaktisch korrekte Java-Klassen, die in ein konfiguriertes Ausgabeverzeichnis geschrieben worden sind. Aus einem Template können also mehrere Ergebnis-Klassen resultieren.
+
+Ein Template enthält neben normalem Java-Source-Code folgende spezielle Elemente, die in den darauffolgenden Abschnitten näher definiert werden:
+\begin{itemize}
+	\item Template-Variablen
+	\item Generator-Direktiven
+	\item Expansions-Blöcke
+\end{itemize}
+
+\subsection{Template-Variablen}
+\label{sec:TemplateVariablen}
+
+\textbf{Template-Variablen} sind Strings, die folgender Syntax folgen: \texttt{\{\$varname\}}, wobei \texttt{varname} der Name der Template-Variablen ist. Außer der schließenden geschweiften Klammer "`\texttt{\}}"' dürfen alle nur denkbaren Zeichen des Unicode-Zeichensatzes in \texttt{varname} vorkommen. Es wird jedoch empfohlen, sich auf ASCII-Zeichen und idealerweise nur auf alphanumerische Zeichen zu beschränken.
+
+Eine an einer bestimmten Stelle in einem Template verwendete Template-Variable mit Namen \texttt{varname} wird als \textit{Instanz} der Template-Variable\footnote{Statt von einer Instanz wird häufig vereinfachend einfach von einer Template-Variablen oder einer Variablen gesprochen. Der Begriff Instanz wird nur dann verwendet, wenn sich besonders auf genau ein Vorkommen einer Template-Variablen in einem Template bezogen wird.} mit dem Namen \texttt{varname} bezeichnet. Es dürfen beliebig viele Instanzen einer Template-Variablen in einem Template vorkommen. Zudem dürfen beliebig viele verschiedene Template-Variablen in einem Template verwendet werden. Die Position einer Instanz einer Template-Variablen im Template ist beliebig. Template-Variablen sollten jedoch nicht ineinander geschachtelt werden\footnote{Genauer: Bei einem Konstrukt der Form \texttt{\{\$var\{\$innervarname\}name\}} wird eine Variable namens \texttt{innervarname} expandiert. Die äußere Variable \texttt{varname} wird nicht expandiert. Der Name der (neuen) Templatevariablen nach Expansion von \texttt{innervarname} wird ggf. expandiert, jedoch nur dann, wenn es sich um eine definierte Variable handelt und sie zufällig nach innervarname expandiert wird. Die Reihenfolge der Expansion ist undefiniert. Daher wird davon abgeraten, Template-Variablen zu verschachteln.}.
+
+Während des Generierungsprozesses werden die Instanzen einer Template-Variablen entsprechend ihres Scopes (Definition des Begriffes siehe im entsprechenden Abschnitt über Scopes) mit Werten belegt, sofern im aktuellen Scope ein Wert für die Variable verfügbar ist. "`Mit Werten belegt"' heißt, dass alle Vorkommen des Strings \texttt{\{\$varname\}} im gesamten aktuellen Scope durch einen anderen String, den Wert der Variablen im aktuellen Scope, ersetzt werden. Ist für die Template-Variable kein Wert im aktuellen Scope definiert, so findet keine Ersetzung der Template-Variablen statt (d.h. die resultierende Java-Klasse weist dann an jeder Stelle Syntax-Fehler auf, an der die Template-Variable verwendet wird und nicht ersetzt werden konnte).
+
+Der Anwender sollte also durch korrekte Verwendung des Generators dafür Sorge tragen, dass alle verwendeten Template-Variablen auch expandiert werden. 
+
+Der Anwender wird durch Warnungen darauf hingewiesen, dass bestimmte Template-Variablen nicht ersetzt werden konnten.
+
+\subsection{Generator-Direktiven}
+\label{sec:GeneratorDirektiven}
+
+\textbf{Generator-Direktiven} sind spezielle Hinweise an den Generator innerhalb von Templates, die den Generierungsprozess beeinflussen bzw. bestimmte Bereiche in einem Template hervorheben. Sie werden im Template mittels folgender Syntax definiert: \texttt{[\$name property$_1$=value$_1$ $\ldots$ property$_n$=value$_n$]}. Dabei ist \texttt{name} der Identifier der Direktive, und \texttt{property$_1$=value$_1$} bis \texttt{property$_n$=value$_n$} sind Schlüssel-Wert-Paare, welche bestimmte Eigenschaften der Direktive angeben. Diese Eigenschaften sind fest je Direktive definiert.
+
+In Version 1.0 wird neben den Expansions-Blöcken (die als spezielle Direktiven angesehen werden können) nur eine weitere Generator-Direktive unterstützt:
+\texttt{[\$SCOPE id=\emph{scopename}, qualifier=\emph{qualifier}]}. Hierbei gilt: 
+\begin{itemize}
+	\item \texttt{\emph{scopename}} ist ein Platzhalter, für den in einem validen Template einer der folgenden Werte genutzt werden muss: \texttt{global}, \texttt{subsys}, \texttt{entity}, \texttt{field}. Erläuterungen des Begriffes Scope siehe Abschnitt über Scopes.
+	\item \texttt{\emph{qualifier}} ist ein Scope-abhängiger Parameter, der Scope-Einschränkungen ermöglicht. Für jeden Scope sind bestimmte qualifier zulässig. Diese ermöglichen es, Einfluss darauf zu nehmen, welches Feld, welche Entitäten oder welches Subsystem zu einer Expansion eines Templates oder eines Expansions-Blockes führen, und welche nicht. Mit Version \TOGenVersion{} ist noch kein qualifier definiert. D.h. dass die Eigenschaft qualifier entweder weggelassen werden muss, oder nur ein leerer String als Wert verwendet werden darf.
+\end{itemize}
+
+Für alle Generator-Direktiven gilt: Sie werden in jedem Fall während des Generierungsprozesses entfernt und gelangen niemals in die generierte Zielklasse.
+
+\subsection{Expansions-Blöcke}
+\label{sec:ExpansionsBloecke}
+
+\textbf{Expansions-Blöcke} sind spezielle Generator-Direktiven, die im Wesentlichen den Kontrollstrukturen einer typischen imperativen Programmiersprache entsprechen, jedoch natürlich deutlich weniger mächtig sind. Sie werden in Templates verwendet, um bedingte oder auch wiederholte Expansion des im Inneren des Blocks eingeschlossenen Textes zu ermöglichen. Man spricht also sowohl von der Expansion eines gesamten Templates als auch von der Expansion eines einzelnen Expansions-Blockes.
+
+Mit Version \TOGenVersion{} werden folgende Expansions-Blöcke unterstützt: Repeat-Blöcke und Conditional-Blöcke.
+
+\subsubsection{Repeat-Block}
+\label{sec:RepeatBlock}
+
+Ein \textbf{Repeat-Block} ermöglicht die Definition von Bereichen, die wiederholt in einem Template expandiert werden. Ein Repeat-Block ist immer an einen Scope gebunden. Die Syntax eines Repeat-Blocks ist folgende:
+\texttt{[\$REPEAT scope=\emph{scopename} qualifier=\emph{qualifier}]}
+Hierbei gilt: 
+\begin{itemize}
+	\item \texttt{\emph{scopename}} ein Platzhalter, für den in einem validen Template einer der folgenden Werte genutzt werden muss: \texttt{global}, \texttt{subsys}, \texttt{entity}, \texttt{field}. Erläuterungen des Begriffes Scope siehe Abschnitt über Scopes.
+	\item \texttt{\emph{qualifier}} ist ein Scope-abhängiger Parameter, der Scope-Einschränkungen ermöglicht. Für jeden Scope sind bestimmte qualifier zulässig. Diese ermöglichen es, Einfluss darauf zu nehmen, welches Feld, welche Entitäten oder welches Subsystem zu einer Expansion eines Templates oder eines Expansions-Blockes führen, und welche nicht. Mit Version \TOGenVersion{} ist noch kein qualifier definiert. D.h. dass die Eigenschaft qualifier entweder weggelassen werden muss, oder nur ein leerer String als Wert verwendet werden darf.
+\end{itemize}
+
+\subsubsection{Conditional-Block}
+\label{sec:ConditionalBlock}
+
+Ein \textbf{Conditional-Block} ermöglicht die Definition von Bereichen, die bei Eintreten einer Bedingung in einem Template expandiert werden. Die Syntax eines Conditional-Blocks ist folgende:
+\texttt{[\$COND condition=\emph{condition}]}
+Dabei ist \texttt{\emph{condition}} ein boolscher Ausdruck entspricht mit Einschränkungen der Java-Syntax. Es dürfen konkret folgende Symbole verwendet werden:
+\begin{itemize}
+	\item \texttt{true} sorgt dafür, dass der Conditional-Block immer expandiert wird
+	\item \texttt{false} sorgt dafür, dass der Conditional-Block nie expandiert wird
+	\item Verwendbare binäre Operatoren: \verb$==, !=, &&, ||$
+	\item Verwendbare unäre Operatoren: \verb$!$
+	\item Alle Template-Variablen \texttt{\{\$varname\}} des aktuellen Scopes
+	\item Das spezielle Literal null bezeichnet eine im aktuellen Scope nicht definierte Variable
+	\item Klammerausdrücke, um mehrere binäre oder unäre Ausdrücke zu verbinden und Vorrangregeln zu umgehen
+	\item In einfachen Hochkommata eingeschlossene Ausdrücke bezeichnen literale Strings, somit ist auch der leere String und der literale String 'null' angebbar.
+\end{itemize}
+
+Da Template-Variablen nur als Strings betrachtet werden, sind andere Operatoren zwar vorstellbar, aber sind für Version \TOGenVersion{} ausgeschlossen. Insbesondere sind ausgeschlossen:
+\begin{itemize}
+	\item Ungleichungsoperatoren \verb$<,>,<=,>=$
+	\item Rechenoperatoren \verb$+, -, *, /, \%$
+	\item Binäre Operatoren \verb$&, |, ^$
+	\item Der tertiäre Operator \verb$? :$
+	\item Sonstige Java-Ausdrücke wie Zuweisungen, Array-Ausdrücke, Methodenaufrufe etc.
+\end{itemize}
+
+\subsection{Schachteln von Expansions-Blöcken}
+
+Expansions-Blöcke dürfen grundsätzlich beliebig tief ineinander geschachtelt werden. Schachtelung heißt, dass ein weiterer Expansions-Block im Inneren eines anderen Expansions-Blocks verwendet wird. Es gelten folgenden Möglichkeiten und Bedingungen:
+\begin{itemize}
+	\item Conditional-Blöcke dürfen beliebig tief ineinander verschachtelt werden.
+	\item Conditional-Blöcke dürfen beliebig in Repeat-Blöcken verschachtelt werden.
+	\item Repeat-Blöcke dürfen beliebig in Conditional-Blöcken verschachtelt werden.
+	\item Ein Repeat-Block darf nur dann in einen anderen Repeat-Block verschachtelt werden, wenn er einen niedrigeren Scope hat. Z.B. darf ein Repeat-Block mit Scope \texttt{entity} nicht in einem anderen Repeat-Block mit Scope \texttt{field} oder in einem anderen Repeat-Block mit Scope \texttt{entity} verwendet werden, wohl aber in Repeat-Blöcken der Scopes \texttt{global} und \texttt{subsys}.
+\end{itemize}
+
+\section{Scopes}
+
+Ein \textbf{Scope} bezeichnet den Gültigkeitsbereich des aktuellen Templates oder Repeat-Blockes. Dieser gibt an, wie oft ein Template oder Repeat-Block expandiert wird. Ein Scope bezieht sich immer auf die Gesamtmenge der für einen Generierungslauf verwendeten Quell-Entitäten. Die folgenden Scopes sind insgesamt verfügbar:
+\begin{itemize}
+	\item \textbf{Field:} Bezieht sich auf genau ein Feld (=Java-Attribut) genau einer Quell-Entitäts-Klasse
+	\item \textbf{Entity:} Bezieht sich auf genau eine Quell-Entitäts-Klasse
+	\item \textbf{Subsystem:} Bezeichnet eine nach bestimmten Kriterien umrissene Teilmenge der Quell-Entitäten
+	\item \textbf{Global:} Globaler Scope, unabhängig von Subsystemen, Entitäten oder Feldern
+\end{itemize}
+
+Für jeden Scope sind bestimmte qualifier zulässig. Diese ermöglichen es, Einfluss darauf zu nehmen, welches Feld, welche Entitäten oder welches Subsystem zu einer Expansion des Templates oder des Repeat-Blockes führen und welche nicht. Die Liste der verfügbaren Qualifier mit ihren Bedeutungen findet sich oben bei der Beschreibung der Generator-Direktive \texttt{SCOPE}.
+
+\subsection{Template-Scope}
+\label{sec:TemplateScope}
+
+Der Template-Scope wird durch die verpflichtende Generator-Direktive \texttt{SCOPE} (Beschreibung siehe Abschnitt oben) in der ersten Zeile eines Templates genau einmal definiert. Mit Version \TOGenVersion{} des Generators gilt:
+\begin{itemize}
+	\item \textbf{Field:} Das Template wird genau einmal für jedes Feld der Quell-Entität expandiert. Es wird jedes Feld verwendet, unabhängig davon, ob es transient oder persistent ist.
+	\item \textbf{Entity:} Das Template wird genau einmal für jede Quell-Entität expandiert. Dabei spielt keine Rolle, ob die Quell-Entität selbst abstrakt oder Basisklasse einer anderen Entität ist.
+	\item \textbf{Subsystem:} Das Template wird genau einmal je Subsystem expandiert (sofern in der Konfiguration die verfügbaren Subsysteme definiert worden sind).
+	\item \textbf{Global:} Das Template wird genau einmal expandiert.
+\end{itemize}
+
+\subsection{Scope von Repeat-Blöcken}
+\label{sec:RepeatScope}
+
+Der Scope von Repeat-Blöcken wird mittels der Eigenschaft \texttt{scope} definiert und kann einen der oben genannten Werte annehmen. 
+Mit Version \TOGenVersion{} des Generators gilt:
+\begin{itemize}
+	\item \textbf{Field:} Der Repeat-Block wird genau einmal für jedes Feld der Quell-Entität expandiert. Es wird jedes Feld verwendet, unabhängig davon, ob es transient oder persistent ist.
+	\item \textbf{Entity:} Das Repeat-Block wird genau einmal für jede Quell-Entität expandiert. Dabei spielt keine Rolle, ob die Quell-Entität selbst abstrakt oder Basisklasse einer anderen Entität ist.
+	\item \textbf{Subsystem:} Das Repeat-Block wird genau einmal je Subsystem expandiert (sofern in der Konfiguration die verfügbaren Subsysteme definiert worden sind).
+	\item \textbf{Global:} Der Scope global wird unterstützt, führt aber lediglich dazu, dass der Inhalt des Repeat-Blockes genau einmal expandiert wird.
+\end{itemize}
+
+\subsection{Scope-Abhängigkeit von Template-Variablen und Hierarchie}
+\label{sec:ScopeAbhTemplate}
+
+Eine Template-Variable ist an einen Scope gebunden. Bindung an einen Scope bedeutet: Der Wert der Variablen ist nur in einem gegebenen Scope gültig bzw. unveränderlich. Ist bei der Definition einer Template-Variablen kein Scope angegeben, so hat sie standardmäßig globalen Scope. Es gilt:
+\begin{itemize}
+	\item Template-Variablen mit Scope \texttt{global} sind während des gesamten Generierungsvorganges unveränderlich, ändern ihren Wert also nicht. Sie dürfen völlig uneingeschränkt in jedem Template und jedem Scope verwendet werden. Man kann diese als Konstanten betrachten.
+	\item Template-Variablen mit Scope \texttt{subsys} haben nur innerhalb von Templates oder Repeat-Blöcken mit Scope \texttt{subsys}, \texttt{entity} oder \texttt{field} einen Wert. Sie können in all diesen Scopes verwendet werden. Werden sie im Scope \texttt{global} verwendet, werden sie nicht expandiert. Sie ändern ihren Wert potentiell je Subsystem.
+	\item Template-Variablen mit Scope \texttt{entity} haben nur innerhalb von Templates oder Repeat-Blöcken mit Scope \texttt{entity} oder \texttt{field} einen Wert. Sie können in all diesen Scopes verwendet werden. Werden sie in den Scopes \texttt{global} oder \texttt{subsys} verwendet, werden sie nicht expandiert. Sie ändern ihren Wert potentiell je Quell-Entität.
+	\item Template-Variablen mit Scope \texttt{field} haben nur innerhalb von Templates oder Repeat-Blöcken mit Scope \texttt{field} einen Wert. Sie können nur in diesem Scope verwendet werden. Werden sie in den Scopes \texttt{global}, \texttt{subsys} oder \texttt{entity} verwendet, werden sie nicht expandiert. Sie ändern ihren Wert potentiell je Feld einer jeden Quell-Entität.
+\end{itemize}
+
+\section{Vordefinierte Template-Variablen}
+\label{sec:VordefinierteTemplateVars}
+
+Je Scope gibt es einen Satz vordefinierter Template-Variablen. Diese sind während des Generierungsprozesses mit definierten Werten (üblicherweise aus den Quell-Entitäten stammend) belegt. Die folgende Tabelle gibt die vordefinierten Template-Variablen je Scope mit Version \TOGenVersion{} an:
+
+\begin{longtable}{|p{0.2\textwidth}|p{0.1\textwidth}|p{0.5\textwidth}|}
+	\hline
+   	\textbf{Template-Variable} & \textbf{Scope} & \textbf{Erläuterung} \\
+	\endhead
+	\hline
+	 gen.name & \texttt{global} & Name des Generators, der für die Generierung eingesetzt wird.\\
+	\hline
+	 gen.version & \texttt{global} & Version des Generators, die für die Generierung eingesetzt wird.\\
+	\hline
+	 gen.date.start & \texttt{global} & Datum des Startzeitpunktes des aktuellen Generatorlaufs, formatiert in aktueller locale.\\
+	\hline
+	 gen.date.curr & \texttt{global} & Aktuelles Datum, an dem die Expansion des aktuellen Templates gestartet wurde, formatiert in aktueller locale.\\
+	\hline
+	 gen.time.start & \texttt{global} & Uhrzeit des Startzeitpunktes des aktuellen Generatorlaufs, formatiert in aktueller locale.\\
+	\hline
+	 gen.time.curr & \texttt{global} & Uhrzeit, an dem die Expansion des aktuellen Templates gestartet wurde, formatiert in aktueller locale.\\
+	\hline
+	 ent.name & \texttt{entity} & Name der Quell-Entität (entspricht dem name-Attribut der @Entity-Annotation).\\
+	\hline
+	 ent.type & \texttt{entity} & Simple name der Quell-Entitäts-Klasse.\\
+	\hline
+	 ent.type.trim & \texttt{entity} & Simple name der Quell-Entität-Klasse, gekürzt um Präfix und Suffix.\\
+	\hline
+	 ent.type.pkg & \texttt{entity} & Package der Quell-Entität.\\
+	\hline
+	 ent.type.full & \texttt{entity} & Shortcut für \linebreak \texttt{\$\{ent.type.pkg\}.\$\{ent.type\}}.\\
+	\hline
+	 ent.ver.name & \texttt{entity} & Name des @Version annotierten Feldes der Quell-Entität (falls vorhanden).\\
+	\hline
+	 ent.ver.type & \texttt{entity} & Simple name des Typs des @Version annotierten Feldes der Quell-Entität (falls vorhanden).\\
+	\hline
+	 ent.ver.type.pkg & \texttt{entity} & Package des Typs des @Version annotierten Feldes der Quell-Entität (falls vorhanden).\\
+	\hline
+	 ent.ver.type.full & \texttt{entity} & Shortcut für \linebreak \texttt{\$\{ent.ver.type.pkg\}.\$\{ent.ver.type.name\}}.\\
+	\hline
+	 field.name & \texttt{field} & Name des Feldes.\\
+	\hline
+	 field.name.u & \texttt{field} & Name des Feldes, erster Buchstabe ist Großbuchstabe.\\
+	\hline
+	 field.type & \texttt{field} & Java-Typname des Feldes.\\
+	\hline
+	 field.type.pkg & \texttt{field} & Package des Java-Typnamens des Feldes.\\
+	\hline
+	 field.type.full & \texttt{field} & Shortcut für \linebreak \texttt{\$\{field.type.pkg\}.\$\{field.type.name\}}.\\
+	\hline
+	\caption{Vordefinierte Template-Variablen}
+	\label{tab:VordDEFTE}
+\end{longtable}
+
+\section{Benutzerdefinierte Template-Variablen}
+
+Neben den vordefinierten Template-Variablen dürfen benutzerdefinierte Template-Variablen in der Generator-Konfiguration vorgegeben werden. Bei der Definition benutzerdefinierter Template-Variablen kann der Scope der Variable angegeben werden (default bei fehlender Scope-Angabe: global).
+
+Es gelten folgende Regeln für die Definition benutzerdefinierte Template-Variablen:
+\begin{itemize}
+	\item Die benutzerdefinierte Template-Variable darf nicht dem Namen einer der vordefinierten Template-Variablen entsprechen \-- völlig unabhängig vom Scope. Template-Variablen, die mit reservierten Namensbereichen beginnen, sollten vermieden werden, da sie zukünftig zu vordefinierten Template-Variablen werden könnten. Reservierte Namensbereiche in Version \TOGenVersion{} sind: \texttt{gen.}, \texttt{sub.}, \texttt{ent.}, \texttt{field.}, \texttt{constr.}, \texttt{assoc.}, \texttt{attr.}, \texttt{entl.}, \texttt{join.}, \texttt{pkjoin.}, \texttt{sec.}, \texttt{namq.}, \texttt{namnq.}, \texttt{sqlr.}.
+	\item Eine benutzerdefinierte Template-Variable darf nur einem in der Generator-Konfiguration definiert werden.
+	\item Eine benutzerdefinierte Template-Variable darf den Wert einer anderen Template-Variablen (benutzerdefiniert oder vordefiniert) über die Syntax \texttt{\{\$varname\}} referenzieren. Es ist dabei irrelevant, ob die verwendeten benutzerdefinierten Variablen vorher oder nachher in der Generator-Konfiguration definiert worden sind. Es dürfen nur existierende Variablen verwendet werden. Natürlich dürfen auch mehrere verschiedene oder mehrere gleiche Instanzen von anderen Template-Variablen im Wert der Variablen genutzt werden. Verwendung des eigenen Variablennamens im eigenen Wert ist nicht zulässig. Alle im Wert verwendeten Template-Variablen müssen denselben Scope haben wie die Variable selbst.
+	\item Eine benutzerdefinierte Template-Variable darf unabhängig von ihrem Scope eine beliebige Java runtime property referenzieren. Dies geschieht mit der Syntax \texttt{\{\$prop:propertyname\}}. Ist eine solche Java runtime property nicht definiert, so wird der leere String als Wert verwendet.
+	\item Eine benutzerdefinierte Template-Variable darf nicht den Namen einer Konfigurations-Property des Generators verwenden. Folgende Präfixe für Konfigurations-Properties sind aktuell reserviert und sollten daher nicht als Beginn eines Namens einer vordefinierten Variable verwendet werden: \texttt{prop.}.
+\end{itemize}
+
+Aufgrund all der oben genannten Einschränkungen wird empfohlen, alle benutzerdefinierten Template-Variablen mit Präfix \texttt{usr.} zu beginnen. Es wird garantiert, dass weder Konfigurations-Properties noch vordefinierte Template-Variablen jemals mit diesem Präfix beginnen. Der Generator schreibt eine Warnung, wenn er eine benutzerdefinierte Variable ohne diesen Präfix vorfindet.
+
+Die Syntax und Beispiele für die Definition benutzerdefinierter Variablen findet sich im Abschnitt über die Konfiguration des Generators.
+
+\section{Subsysteme}
+
+Die Variable \texttt{sub.name} mit Scope \texttt{subsys} ist ein Sonderfall: Es handelt sich um eine Mischung aus vordefinierter und benutzerdefinierter Variablen. Vordefiniert, weil sie - falls definiert - eine besondere Bedeutung und immer Scope \texttt{subsys} hat. Sie gibt für das aktuelle Subsystem den Namen des Subsystems an. Sie ist optional, muss also keinen Wert haben. Dies bedeutet: Es gibt keine Subsysteme, oder: Es gibt genau ein namenloses Subsystem unter \texttt{global}.
+
+Wie entstehen Subsysteme? Es handelt sich nicht um etwas, das automatisiert aus den Quell-Entitäten extrahiert werden kann. Ein Subsystem ist eine Menge zusammengehörender Entitäten. Gibt es nur ein Subsystem, so muss es alle Entitäten enthalten. Gibt es mehrere Subsysteme, so müssen sie disjunkt sein, ihre Vereinigung muss alle Entitäten überdecken. Die Angabe aller vorhandenen Subsysteme erfolgt durch den Anwender auf genau eine der folgenden Arten:
+\begin{itemize}
+	\item Verwendung der Variablen \texttt{\{\$sub.name\}} in der Konfigurations-Property \texttt{prop.src.pkg} (Details siehe bei der Beschreibung der property). Dabei entspricht ein Subsystem im Wesentlichen einem Package, und alle Entitäten in diesem Package gehören zum Subsystem.
+	\item Definition aller Subsysteme in der Konfigurations-Datei. Dabei müssen Variablen verwendet werden, die mit \texttt{sub.} beginnen. Der String nach dem Punkt bezeichnet den Namen des Subsystems. Dieser darf außer "`name"' alel Werte annehmen. Ein Subsystem darf allerdings nur einmal als Variable in der Konfigurationsdatei definiert werden. Als Wert eines jeden Subsystems darf eine Semikolon-separierte Liste von Package- und vollqualifizierten Klassennamen (die Entitäten) verwendet werden. Dabei sind Wildcards erlaubt.
+\end{itemize}
+
+Beide Konfigurationsarten schließen sich gegenseitig aus.
+
+\section{Konfiguration des Generierungsprozesses}
+
+Die Konfiguration des Generierungsprozesses erfolgt über eine properties-Datei namens jtoGenerator.properties. Bei Ausführung des Generators wird eine Datei dieses Namens im aktuellen Classpath gesucht. Konnte keine Datei gefunden werden, wird versucht, die verpflichtenden Konfigurations-Properties in den aktuellen Java runtime properties zu finden. Werden sie dort nicht gefunden, wird der Generator mit einer Fehlermeldung beendet. Werden hingegen mehrere Dateien des Namens im Classpath gefunden, so wird eine (nicht deterministisch) ausgewählt, und der Generator schreibt eine entsprechende Log-Warnung.
+
+Eine Konfigurations-Property ist entweder verpflichtend oder nicht. Werden verpflichtende properties nicht angegeben, so führt dies zum sofortigen Abbruch des Generierungsprozesses mit einer Fehlermeldung. Werden nicht-verpflichtende properties weggelassen (d.h. sie tauchen gar nicht in der properties-Datei auf bzw. werden nicht als runtime property gesetzt), so werden hierfür die definierten Default-Werte verwendet.
+
+In den folgenden Abschnitten ist beschrieben, welche Konfigurations-Properties angegeben werden können.
+
+\subsection{Generelles zu Konfigurationsproperties}
+
+Es gibt mehrere Konfigurations-Properties, die denselben Typ haben bzw. eine ähnliche Art und Weise von Wertangaben haben. Diese Gemeinsamkeiten werden hier zusammenfassend erläutert:
+\begin{itemize}
+	\item \emph{Package-Angaben:} Für Packages gelten die Java-Konventionen (Trennung der Packages durch \texttt{.}).  Package-Angaben dürfen bei manchen Konfigurations-Properties auch Wildcards enthalten (siehe Punkt unten). Ein Package wird im folgenden auch verallgemeinert als Segment bezeichnet.
+	\item \emph{Pfad-Angaben:} Pfade können absolut oder relativ angegeben werden. Als Pfad-Trennsymbol kann \\ (unter Windows üblich) oder \/ (unter Unix üblich) verwendet werden. Pfad-Angaben dürfen bei manchen Konfigurations-Properties auch Wildcards enthalten (siehe Punkt unten). Bei relativen Pfadangaben ist das aktuelle Verzeichnis immer das Verzeichnis, in dem die Generator-Anwendung abgelegt ist. Auch bei Pfad-Angaben sprechen wir bei einem Verzeichnis des Pfades von einem Segment. Eine Pfad-Angabe kann sich entweder auf ein Verzeichnis oder eine Datei beziehen.
+	\item \emph{Wildcards}: Siehe nächsten Abschnitt.
+	\item \emph{Mehrwertige und atomare Werte für Properties:} Eine Property kann entweder genau einen (atomaren) Wert verlangen, oder aber mehrere gleichartige Werte (1 bis N) erlauben. Bei mehrwertigen Properties müssen die Einzelwerte mit \texttt{;} abgetrennt werden. Die Verwendung von \texttt{;} am Ende der mehrwertigen Properties ist erlaubt. Wird bei atomaren Properties \texttt{;} verwendet, wird dies als Bestandteil des Wertes interpretiert.
+	\item \emph{Leerer Property-Wert:} Ein leerer Wert hinter einer Property wird völlig gleichbedeutend mit dem Nichtvorhandensein der Property interpretiert.
+\end{itemize}
+
+Wir unterscheiden dann entsprechend die Typen Datei-Pfad, Verzeichnis-Pfad, gemischter Pfad (Datei oder Verzeichnis), Package, String, wobei String ein beliebiger Wert ohne Einschränkungen ist. Alle drei Typen können atomar oder mehrwertig sein. Wildcards sind nur für Packages und Pfade wie oben definiert verwendbar und werden in Strings ignoriert.
+
+\subsection{Wildcards}
+
+Wildcards dürfen in Pfad-Angaben und Package-Angaben genutzt werden, um Schreibarbeit zu sparen und mehrere Pfade bzw. Packages mit nur einer Angabe zu verwenden. Die Pfad-Angaben mit Wildcard-Ausdrücken werden dabei mit dem tatsächlichen Dateisystem der aktuellen Maschine abgeglichen, um passende Verzeichnisse, Dateien oder Packages zu finden. Bei Elementen, die dem Wildcardausdruck entsprechen, spricht man von einem \emph{match}. Wildcardausdrcüke sind also eine Art und Weise, existierende Verzeichniss, Dateien und Packages ohne allzu viel Schreibarbeit bequem addressieren zu können.
+
+Es gibt nur zwei Wildcards:
+\begin{itemize}
+	\item \verb|*| zur Angabe einer beliebigen Zeichenkette. Dies matched nur bis zum nächsten Verzeichnis-Trennsymbol bzw. bis zum nächsten Package-Trennsymbol.
+	\item Der Wildcard \verb|**| matched hingegen alle Verzeichnisse oder Dateien bzw. Packages rekursiv bis zum nächsten danach angegebenen Verzeichnis bzw. Package.
+\end{itemize}
+
+Wildcards dürfen an beliebiger Stelle stehen und natürlich auch mehrfach in einer Pfad- oder Package-Angabe verwendet werden.
+
+Wird \verb|*| verwendet, dürfen im gleichen Segment vor oder hinter dem Wildcard noch beliebige (Pfad bzw. Package-valide) Zeichen verwendet werden. Dies kann also zu u.U. sehr vielen Dateien führen. Wird \verb|*| am Ende des Pfades verwendet, dann werden alle Verzeichnisse bzw. Dateien im zuletzt angegebenen Unterverzeichnis (nicht-rekursiv) eingelesen. \verb|*| kann auch mehrfach innerhalb desselben Segments verwendet werden, allerdings nicht direkt hintereinander (sonst wird \verb|**| erkannt). \verb|*| kann im Falle von Dateipfaden natürlich auch im letzten Segment verwendet werden, um mehrere Dateinamen zu verwenden (z.B. C:\\xyz\\log*.txt). \verb|*| bezieht sich immer nur auf das aktuelle Segment.
+
+Wird \verb|**| verwendet, so dürfen im selben Segment keine anderen Zeichen verwendet werden, und es muss sowohl davor (falls nicht direkt zu Beginn des Pfades verwendet) als auch danach (falls nicht direkt am Ende des Pfades verwendet) ein Pfad- bzw. Package-Trennsymbol stehen. Wird \verb|**| am Ende des Pfades verwendet, heißt dies, dass ab dem Punkt alle Verzeichnisse bzw. Dateien bzw. Packages rekursiv eingelesen werden. Wird \verb|**| mehrfach direkt hintereinander verwendet, so ist dies äquivalent zur Verwendung nur eines \verb|**|.
+	
+Werden nach \verb|*| oder \verb|**| noch Segmente angegeben, so matchen diese nur, wenn es im Segment von \verb|*| Ordner gibt, die dem Ausdruck entsprechen und Unterverzeichniss oder -Dateien haben, die den nachfolgenden Segmenten entsprechen. Die nachfolgenden Segmente matchen nicht, wenn das übergeordnete Verzeichnis entsprechende Segmente hat. Beispiel:
+\begin{itemize}
+	\item Pfade sind \texttt{C:/abc/xyz/hij} sowie \texttt{C:/abc/lmn}
+	\item Der Wildcardausdruck \texttt{C:/abc/*/lmn} matched keinem der Pfade, denn unter abc gibt es nur das Unterverzeichnis \texttt{xyz}, das nur ein Unterverzeichnis \texttt{hij} hat.
+	\item Der Wildcardausdruck \texttt{C:/abc/**/lmn} matched aus demselben Grund ebenso keinen der Pfade.
+	\item Der Wildcardausdruck \texttt{C:/*/lmn} matched den Pfad \texttt{C:/abc/lmn}.
+	\item Der Wildcardausdruck \texttt{C:/**/lmn} matched ebenso den Pfad \texttt{C:/abc/lmn}.
+	\item Der Wildcardausdruck \texttt{C:/**/*} matched die Pfade \texttt{C:/abc/lmn} und \texttt{C:/abc/xyz}.
+\end{itemize}
+
+Für beide Wildcards gilt: Ihre Verwendung zu Beginn des Ausdrucks macht keinen Sinn, weder unter Unix noch unter Windows.
+
+Zudem gilt: Ist ein Segment in einem Ausdruck mit oder ohne Wildcard eine Datei, und folgen danach noch weitere Segmente, dann ist dies natürlich ein Fehler.
+
+\subsection{Umgang mit Nicht-Existenz von Pfaden bzw. Packages}
+
+Bei atomaren Pfad- oder Packageangaben dürfen naturgemäß niemals Wildcards genutzt werden, denn diese könnten zu mehreren Matches führen und damit wäre die Property nicht mehr atomar. Hier gilt: Ist die Property optional, so wird die Nicht-Existenz des Pfades oder Packages im Dateisystem toleriert und nur mit einer Warnung vermerkt.
+
+Bei mehrwertigen Pfad- oder Packageangaben, für die Wildcards nicht erlaubt sind, gilt: Mindestens einer der Pfade bzw. Packages muss existieren, sonst resultiert ein Fehler. Für alle anderen angegeben, jedoch nicht-existenten Pfade bzw. Packages wird eine Warnung vermerkt.
+
+Bei mehrwertigen Pfad- oder Packageangaben, für die Wildcards erlaubt sind, gilt: Existiert nach dem Expandieren der Wildcards ein Teilpfad nicht, wird eine Warnung vermerkt. Auch sonst analog: Mindestens einer der Pfade bzw. Packages muss existieren, sonst resultiert ein Fehler. Für alle anderen angegeben, jedoch nicht-existenten Pfade bzw. Packages wird eine Warnung vermerkt.
+
+\subsection{Angaben über die Generierungsquelle}
+
+Um den Generator zu nutzen, sind Angaben über die Generierungsquelle notwendig. Die folgende Tabelle listet die mit Version \TOGenVersion{} definierten Properties.
+
+\begin{longtable}{|p{0.2\textwidth}|p{0.2\textwidth}|p{0.5\textwidth}|}
+	\hline
+   	\textbf{Property} & \textbf{Eigenschaften} & \textbf{Erläuterung} \\
+	\endhead
+	\hline
+	 prop.src.path & Verpflichtend, gemischter Pfad, Wildcards nicht erlaubt, atomar & Das Quellverzeichnis bzw. die Quell-JAR-Datei, in dem die Quell-Entitäten erwartet werden. Es handelt sich also um deren Classpath.\\
+	\hline
+	 prop.src.pkg & Verpflichtend, Package, Wildcards erlaubt, mehrwertig & Die Quellpackages, aus dem die Quell-Entitäten gelesen werden. Nur im Wert dieser Property darf die spezielle Variable \texttt{\{\$sub.name\}} verwendet werden. Sie darf mehrfach im Wert der Property benutzt werden, jedoch innerhalb desselben Pfades nur einmal. Sie hat die gleichen Auswirkungen und Verwendungsregeln wie die Verwendung des Wildcards \verb|*|. Allerdings wird jedes unterschiedliche Package, dass matched, als Subsystem betrachtet, und alle Entitäten, die sich im gleichen Subsystem befinden, als diesem zugehörig. Die Entitäten in allen Package-Angaben, in denen \texttt{\{\$sub.name\}} nicht vorkommt, werden einem intern generierten "`Rest"'-Subsystem zugeordnet. \\
+	\hline
+	 prop.src.suff & Optional, String, atomar & Suffix der Entities. Wenn angegeben, erfüllt dieser zwei Funktionen: Erstens werden nur Entity-Klassen verwendet, die diesen Suffix im simple name haben. Zweitens wird der Suffix für die Bestimmung der vordefinierten Template-Variablen \texttt{ent.type.trim} verwendet: Der Suffix wird im Wert von \texttt{ent.type.trim} weggelassen.\\
+	\hline
+	 prop.src.pref & Optional, String, atomar & Präfix der Entities. Wenn angegeben, erfüllt dieser zwei Funktionen: Erstens werden nur Entity-Klassen verwendet, die diesen Präfix im simple name haben. Zweitens wird der Präfix für die Bestimmung der vordefinierten Template-Variablen \texttt{ent.type.trim} verwendet: Der Präfix wird im Wert von \texttt{ent.type.trim} weggelassen.\\
+	\hline
+	 prop.src.template.\linebreak files & Verpflichtend, Datei-Pfad, Wildcards erlaubt, mehrwertig & Gibt alle für die Generierung zu verwendenden Template-Dateien an. \\
+	\hline
+	 prop.src.dep & Optional, Gemischter Pfad, Wildcards erlaubt, mehrwertig & Ein oder mehrere Verzeichnisse oder auch JAR-Dateien, die auf dem Classpath benötigt werden, damit alle Abhängigkeiten der Quell-Entitäten erfüllt sind. Es werden die gleichen Verzeichnisse benötigt, die zum erfolgreichen Kompilieren aller Quell-Entitäten notwendig sind.\\
+	\hline
+	\caption{Konfigurations-Properties zur Angabe der Generierungsquelle}
+	\label{tab:VordDEFTEKonfig}
+\end{longtable}
+
+\subsection{Angaben über das Generierungsziel}
+
+Außerdem sind Angaben über des Ziel der Generierung erforderlich:
+
+\begin{longtable}{|p{0.2\textwidth}|p{0.2\textwidth}|p{0.5\textwidth}|}
+	\hline
+   	\textbf{Property} & \textbf{Eigenschaften} & \textbf{Erläuterung} \\
+	\endhead
+	\hline
+	 prop.dst.dir & Verpflichtend, Verzeichnis-Pfad, Wildcards nicht erlaubt, atomar & Das Zielverzeichnis der Generierung. In dieses Verzeichnis werden alle generierten Klassen geschrieben.\\
+	\hline
+	\caption{Konfigurations-Properties zur Angabe des Generierungsziels}
+	\label{tab:VordDEFTEKonfigZ}
+\end{longtable}
+
+\subsection{Definition benutzerdefinierte Template-Variablen}
+
+Benutzerdefinierte Template-Variablen werden zusammen mit den Konfigurations-Properties in der Konfigurationsdatei oder als Java-Runtime-Properties angegeben.

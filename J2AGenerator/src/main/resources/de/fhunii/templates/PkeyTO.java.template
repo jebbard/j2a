@@ -1,0 +1,59 @@
+package de.fhunii.templates;
+package {$Package-Name};
+
+/**
+ * {@link {$PkeyTO-Name}} is a transport object with several attributes.
+ *
+ * @author {$Author}
+ */
+public class {$PkeyTO-Name} extends AbstractPkeyTO<{$IdField-Type}>
+{
+	/**
+	 * Creates a new {@link {$PkeyTO-Name}}.
+	 *
+	 * @param {$IdField-Name} The id
+	 [$REPEAT-BLOCK Name="Field", InstanceID="ConstrJavadoc"]* @param {$Field-Name} The value of the field {$Field-Name}.
+	 [$REPEAT-END]
+	 */
+	public {$PkeyTO-Name}({$IdField-Type} {$IdField-Name}, [$REPEAT-BLOCK Name="Field", InstanceID="ConstrParam", Delim=", "]{$Field-Type} {$Field-Name}[$REPEAT-END])
+	{
+		super({$IdField-Name});
+		[$REPEAT-BLOCK Name="Field", InstanceID="ConstrCheck"]
+		FhuniiAssert.notNull({$Field-Name}, "Parameter '{$Field-Name}' must not be null.");[$REPEAT-END]
+		[$REPEAT-BLOCK Name="Field", InstanceID="ConstrAssign"]
+		this.{$Field-Name} = {$Field-Name};[$REPEAT-END]
+	}
+	[$REPEAT-BLOCK Name="Field", InstanceID="Getter"]
+
+	/**
+	 * Returns the value of the field {$Field-Name}.
+	 *
+	 * @return the value of the field {$Field-Name}.
+	 */
+	public {$Field-Type} get{$Field-Name-U}()
+	{
+		return {$Field-Name};
+	}[$REPEAT-END]
+
+	/**
+	 * @see java.lang.Object#toString()
+	 */
+	@Override
+	public String toString()
+	{
+		String stringRepresentation = getClass().getSimpleName() + "[";
+
+		stringRepresentation += "{$IdField-Name}="
+		 +getId() + ", ";[$REPEAT-BLOCK Name="Field", InstanceID="toString", Delim=" + ", ";"]
+		stringRepresentation += "{$Field-Name}=" + {$Field-Name}[$REPEAT-END];
+
+		stringRepresentation += "]";
+
+		return stringRepresentation;
+	}
+
+	[$REPEAT-BLOCK Name="Field", InstanceID="field"]
+	private final {$Field-Type} {$Field-Name};[$REPEAT-END]
+
+	private static final long serialVersionUID = 1L;
+}

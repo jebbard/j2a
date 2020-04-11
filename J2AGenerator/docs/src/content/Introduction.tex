@@ -1,0 +1,27 @@
+%-----------------------------------------------------------------------------------------------
+%		Introduction
+%-----------------------------------------------------------------------------------------------
+
+\chapter{Einleitung}
+\label{sec:Einleitung}
+
+Dieses Dokument stellt eine Kurzspezifikation eines Hilfswerkzeugs für die Entwicklung einer JavaEE-Anwendung dar. Es handelt sich dabei um einen Generator, der aus einer gegebenen Java-Klasse, die einer Standard-JPA-Entität entspricht, auf Basis von Templates andere Java-Klassen generieren kann, z.B. "`Transport-Objekte"' (TOs) oder "`Data Access Objects"' (DAOs). Arbeitstitel des Werkzeuges ist \emph{"`TO from JPA entity generator"'}.
+
+Grundlegende Anforderungen an das Werkzeug:
+\begin{itemize}
+	\item Alle Standard-JPA-2.1-konformen Entitäten können als Input verwendet werden; die zu verwendenden Entitäten werden über Quellpfad und dort befindliche Quellpackages sowie weitere Einschränkungsmöglichkeiten angegeben.
+	\item Alle JPA-relevanten Informationen werden aus der Entität geparst und können dann über \emph{Template-Variablen} in beliebig vielen \emph{Templates} verwendet werden.
+	\item Ein Template ist eine Schablone einer durch den Generator zu erzeugenden Java-Klasse, die im Rahmen des Generierungsprozesses auf Basis der gelesenen Entitäten expandiert wird. Aus einer Schablone können dabei N generierte Java-Klassen entstehen.
+\end{itemize}
+
+Ausschlüsse der Initialversion \TOGenVersion{}:
+\begin{itemize}
+	\item Es werden nur annotierte Entitäten unterstützt, XML-Mappings können nicht ausgewertet werden.
+	\item Mapped superclasses oder Entitäts-Superklassen werden bei Generierung nicht berücksichtigt.
+	\item Der Generator navigiert Beziehungen zwischen Entitäten nicht explizit. Ist eine in Beziehung zur Quellentität stehende Entität nicht in den angegebenen Quellpaketen der Generierung enthalten, so wird der Typ der referenzierten Fremd-Entität in die generierten Klassen übernommen. Für die Fremd-Entität erfolgt dann keine Generierung.
+	\item Spezielle Annotationen von Implementierungen (Hibernate, OpenJPA etc.) werden ignoriert.
+	\item Der Generator erzeugt immer komplett neue Klassen, ein Mergen in bereits generierte Klassen ist nicht möglich.
+	\item Annotationen an Accessor-Methoden statt an Attributen in einer Entität werden nicht unterstützt, die JPA-Annotationen müssen ausschließlich an Feldern verwendet werden.
+	\item Eingebettete Klassen werden momentan nicht geparst.
+	\item Eine grundlegende Erweiterbarkeit durch eigene Template-Generierungsregeln wird aktuell noch nicht unterstützt.
+\end{itemize}

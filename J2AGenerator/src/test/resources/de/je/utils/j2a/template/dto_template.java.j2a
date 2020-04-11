@@ -1,0 +1,36 @@
+<%template name='DTO from Entity' description='Contains a DTO (data transfer object) 
+	Java class that is created from a JPA entity. A DTO basically just has a default 
+	constructor (not explicitly given), the same properties as the entity - except JPA 
+	relations which are replaced by foreign key references - and getters and setters for them.'%>
+
+${dto:targetClass}:=${j2a:source.name}DTO
+
+<%output path='${j2a:source.package}/../../api/dto' file='${dto:targetClass}.java' mode='CREATE'%>
+
+${dto:targetPackage}:=${package(j2a:source.package)/../../api.dto}
+
+package ${dto:targetPackage};
+
+public class ${dto:targetClass} extends ${dto:targetBaseClass} {
+
+	%%% The field declarations
+	<%foreach field f in ${j2a:source.fields}%>
+		%%% JPA relationships are mapped differently
+		<%if (f.getType().isApplicationClass())%>
+	private ${f.getType().getFields()[f -> f.getAnnotations()[a -> a.getName().equals('javax.persistence.@Id')]].getType()} ${f.getName()};
+		<%else%>
+	private ${f.getType().getName()} ${f.getName()};
+		<%end if%>
+	<%end foreach%>
+
+	%%% The getter and setter declarations
+	<%foreach field f in ${j2a:source.fields}%>
+	public ${f.getType().getName()} get${uppercaseFirst(f.getName())}() {
+		return ${f.getName()};
+	}
+
+	public void set${uppercaseFirst(f.getName())}(${f.getType().getName()} ${f.getName()}) {
+		this.${f.getName()} = ${f.getName()};
+	}
+	<%end foreach%>
+}

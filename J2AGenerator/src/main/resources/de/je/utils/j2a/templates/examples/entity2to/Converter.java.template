@@ -1,0 +1,63 @@
+package de.je.utils.j2a.templates.standard;
+package {$Package-Name};
+
+[$REPEAT-BLOCK Name="packages", InstanceID="packages"]
+import {$Entity-Package}.{$Entity-Name};
+import {$TO-Package}.{$TO-Name};
+[$REPEAT-END]
+
+/**
+ * {@link {$Converter-Name}} converts between entities and transport
+ * objects (TOs).
+ *
+ * @author {$Author}
+ */
+public class {$Converter-Name}
+{
+[$REPEAT-BLOCK Name="entityToTO", InstanceID="entityToTO"]
+	/**
+	 * Converts {@link {$Entity-Name}} to {@link {$TO-Name}}.
+	 *
+	 * @param {$Param-Name} The {@link {$Entity-Name}}.
+	 * @return The converted {@link {$TO-Name}}.
+	 */
+	public static {$TO-Name} entityToTransferObject({$Entity-Name} {$Param-Name})
+	{
+		{$TO-Name} to = new {$TO-Name}({$Data-Params});
+		
+		to.setId({$Param-Name}.getPkey());
+		to.setVersion({$Param-Name}.getVersion());
+		
+		return to;
+	}
+[$REPEAT-END]
+
+[$REPEAT-BLOCK Name="ListConvert", InstanceID="ListConvert"]
+	/**
+	 * Converts as {@link List} of {@link {$Entity-Name}} to a {@link List} of {@link {$TO-Name}}.
+	 *
+	 * @param list The {@link List} of {@link {$Entity-Name}}.
+	 * @return The converted {@link List} of {@link {$TO-Name}}.
+	 */
+	public static List<{$TO-Name}> entityListToTOList(List<{$Entity-Name}> list)
+	{
+		List<{$TO-Name}> returnedList = new ArrayList<{$TO-Name}>();
+
+		for (int i = 0; i < list.size(); ++i)
+		{
+			{$Entity-Name} element = list.get(i);
+
+			returnedList.add({$Elem-Conversion}(element));
+		}
+
+		return returnedList;
+	}
+[$REPEAT-END]
+
+	/**
+	 * Private constructor.
+	 */
+	private {$Converter-Name}()
+	{
+	}
+}

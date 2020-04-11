@@ -1,0 +1,140 @@
+package de.je.utils.j2a.templates.standard;
+package {$Package-Name};
+
+import de.je.util.common.err.Reject;
+import de.je.util.enterprise.to.AbstractSingleObjectVersionedTO;
+
+/**
+ * {@link {$TO-Name}} is a transport object with several attributes.
+ *
+ * @author {$Author}
+ */
+public class {$TO-Name} extends AbstractSingleObjectVersionedTO<{$IdField-Type}, {$VersionField-Type}>
+{
+	/**
+	 * Creates a new {@link {$TO-Name}}.
+	 *
+	 [$REPEAT-BLOCK Name="Field", InstanceID="ConstrJavadoc"]* @param {$Field-Name} The value of the field {$Field-Name}. [$COND-BLOCK Name="Nullable", InstanceID="Constr"]May be null.[$COND-END]
+	 [$REPEAT-END]
+	 */
+	public {$TO-Name}([$REPEAT-BLOCK Name="Field", InstanceID="constrParam", Delim=", "]{$Field-Type} {$Field-Name}[$REPEAT-END])
+	{
+		[$REPEAT-BLOCK Name="Field", InstanceID="constrSet"]
+		set{$Field-Name-U}({$Field-Name});[$REPEAT-END]
+	}
+			
+	/**
+	 * Creates a new {@link {$TO-Name}}.
+	 */
+	public {$TO-Name}()
+	{
+	}
+	[$REPEAT-BLOCK Name="Field", InstanceID="getter"]
+
+	/**
+	 * Returns the value of the field {$Field-Name}.
+	 *
+	 * @return the value of the field {$Field-Name}.
+	 */
+	public {$Field-Type} get{$Field-Name-U}()
+	{
+		return {$Field-Name};
+	}[$REPEAT-END]
+	[$REPEAT-BLOCK Name="Field", InstanceID="setter"]
+
+	/**
+	 * Sets the value of the field {$Field-Name}.
+	 *
+	 * @param {$Field-Name} the value of the field {$Field-Name}. [$COND-BLOCK Name="Nullable", InstanceID="setter"]May be null.[$COND-END]
+	 */
+	public void set{$Field-Name-U}({$Field-Type} {$Field-Name})
+	{
+		[$COND-BLOCK Name="NotNullable", InstanceID="setter"]
+		Reject.ifNull({$Field-Name}, "Parameter '{$Field-Name}' must not be null.");[$COND-END]
+		this.{$Field-Name} = {$Field-Name};
+	}[$REPEAT-END]
+
+	/**
+	 * @see java.lang.Object#toString()
+	 */
+	@Override
+	public String toString()
+	{
+		String stringRepresentation = getClass().getSimpleName() + "["+"[" +super.toString()+ "]";
+		[$REPEAT-BLOCK Name="Field", InstanceID="toString", Delim=" + ", ";"]
+		stringRepresentation += "{$Field-Name}=" + {$Field-Name}[$REPEAT-END];
+
+		stringRepresentation += "]";
+
+		return stringRepresentation;
+	}
+
+	/**
+	 * @see java.lang.Object#hashCode()
+	 */
+	@Override
+	public int hashCode()
+	{
+		final int prime = 31;
+		int result = super.hashCode();
+
+		[$REPEAT-BLOCK Name="HashCode", InstanceID="hashCodeLong"]
+		result = prime * result + (int) ({$Field-Name} ^ ({$Field-Name} >>> 32));[$REPEAT-END]
+		[$REPEAT-BLOCK Name="HashCode", InstanceID="hashCodePrimitiveTypes"]
+		result = prime * result + {$Field-Name};[$REPEAT-END]
+		[$REPEAT-BLOCK Name="HashCode", InstanceID="hashCodeBool"]
+		result = prime * result + ({$Field-Name} ? 1231 : 1237);[$REPEAT-END]
+		[$REPEAT-BLOCK Name="HashCode", InstanceID="hashCodeObjects"]
+		result = prime * result + (({$Field-Name} == null) ? 0 : {$Field-Name}.hashCode());[$REPEAT-END]
+		[$REPEAT-BLOCK Name="HashCode", InstanceID="hashCodeFloat"]
+		result = prime * result + Float.floatToIntBits({$Field-Name});[$REPEAT-END]
+		[$REPEAT-BLOCK Name="HashCode", InstanceID="hashCodeDouble"]
+		long {$TMP-var};
+		{$TMP-var} = Double.doubleToLongBits({$Field-Name});
+		result = prime * result + (int) ({$TMP-var} ^ ({$TMP-var} >>> 32));[$REPEAT-END]
+		return result;
+	}
+
+	/**
+	 * @see java.lang.Object#equals(Object)
+	 */
+	@Override
+	public boolean equals(Object obj)
+	{
+		if (this == obj)
+			return true;
+
+		if (!super.equals(obj))
+			return false;
+
+		if (getClass() != obj.getClass())
+			return false;
+
+		{$TO-Name} other = ({$TO-Name}) obj;
+
+		[$REPEAT-BLOCK Name="Equals", InstanceID="equalsPrimitiveTypes"]
+		if ({$Field-Name} != other.{$Field-Name})
+			return false;[$REPEAT-END]
+		[$REPEAT-BLOCK Name="Equals", InstanceID="equalsObjects"]
+		if ({$Field-Name} == null)
+		{
+			if (other.{$Field-Name} != null)
+				return false;
+		}
+
+		else if (!{$Field-Name}.equals(other.{$Field-Name}))
+			return false;[$REPEAT-END]
+		[$REPEAT-BLOCK Name="Equals", InstanceID="equalsFloat"]
+		if (Float.floatToIntBits({$Field-Name}) != Float.floatToIntBits(other.{$Field-Name}))
+			return false;[$REPEAT-END]
+		[$REPEAT-BLOCK Name="Equals", InstanceID="equalsDouble"]
+		if (Double.doubleToLongBits({$Field-Name}) != Double.doubleToLongBits(other.{$Field-Name}))
+			return false;[$REPEAT-END]
+
+		return true;
+	}
+	[$REPEAT-BLOCK Name="Field", InstanceID="field"]
+	private {$Field-Type} {$Field-Name};[$REPEAT-END]
+
+	private static final long serialVersionUID = 1L;
+}

@@ -1,0 +1,79 @@
+package de.fhunii.templates;
+package {$Package-Name};
+
+/**
+ * {@link {$Converter-Name}} converts persistent objects to transport
+ * objects.
+ *
+ * @author {$Author}
+ */
+public class {$Converter-Name}
+{
+[$REPEAT-BLOCK Name="CTO", InstanceID="CTO"]
+	/**
+	 * Converts {@link {$PO-Name}} to {@link {$CTO-Name}}.
+	 *
+	 * @param {$Param-Name} The {@link {$PO-Name}}.
+	 * @return The converted {@link {$CTO-Name}}.
+	 */
+	public static {$CTO-Name} toCTO({$PO-Name} {$Param-Name})
+	{
+		return new {$CTO-Name}(new {$PkeyTO-Name}({$Pkey-Params}), toDataTO({$Param-Name}));
+	}
+[$REPEAT-END]
+
+[$REPEAT-BLOCK Name="DataTO", InstanceID="DataTO"]
+	/**
+	 * Converts {@link {$PO-Name}} to {@link {$DataTO-Name}}.
+	 *
+	 * @param {$Param-Name} The {@link {$PO-Name}}.
+	 * @return The converted {@link {$DataTO-Name}}.
+	 */
+	public static {$DataTO-Name} toDataTO({$PO-Name} {$Param-Name})
+	{
+		return new {$DataTO-Name}({$Data-Params});
+	}
+[$REPEAT-END]
+
+[$REPEAT-BLOCK Name="InfoTO", InstanceID="InfoTO"]
+	/**
+	 * Converts {@link {$PO-Name}} to {@link {$InfoTO-Name}}.
+	 *
+	 * @param {$Param-Name} The {@link {$PO-Name}}.
+	 * @return The converted {@link {$InfoTO-Name}}.
+	 */
+	public static {$InfoTO-Name} toInfoTO({$PO-Name} {$Param-Name})
+	{
+		return new {$InfoTO-Name}({$Data-Params});
+	}
+[$REPEAT-END]
+
+[$REPEAT-BLOCK Name="ListConvert", InstanceID="ListConvert"]
+	/**
+	 * Converts as {@link List} of {@link {$PO-Name}} to a {@link List} of {@link {$AnyTO-Name}}.
+	 *
+	 * @param list The {@link List} of {@link {$PO-Name}}.
+	 * @return The converted {@link List} of {@link {$AnyTO-Name}}.
+	 */
+	public static List<{$AnyTO-Name}> convert{$PO-Name}List(List<{$PO-Name}> list)
+	{
+		List<{$AnyTO-Name}> returnedList = new ArrayList<{$AnyTO-Name}>();
+
+		for (int i = 0; i < list.size(); ++i)
+		{
+			{$PO-Name} element = list.get(i);
+
+			returnedList.add({$Elem-Conversion}(element));
+		}
+
+		return returnedList;
+	}
+[$REPEAT-END]
+
+	/**
+	 * Private constructor.
+	 */
+	private {$Converter-Name}()
+	{
+	}
+}

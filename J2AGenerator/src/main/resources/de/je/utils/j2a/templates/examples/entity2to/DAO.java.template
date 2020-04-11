@@ -1,0 +1,67 @@
+package de.je.utils.j2a.templates.standard;
+package {$Package-Name};
+
+import {$Entity-Package}.{$Entity-Name};
+import {$TO-Package}.{$TO-Name};
+		
+import de.je.util.enterprise.jpa.AbstractEntityDAO;
+import de.je.util.enterprise.to.AbstractSingleObjectVersionedTO;
+
+import javax.persistence.EntityManager;
+import javax.persistence.PersistenceContext;
+
+/**
+ * Data access object for persisting, finding and 
+ * updating the entity {@link {$Entity-Name}}.
+ *
+ * @author {$Author}
+ */
+public class {$DAO-Name} extends AbstractEntityDAO<{$IdField-Type}, {$VersionField-Type}, {$Entity-Name}>
+{
+	/**
+	 * Constructor.
+	 */
+	public {$DAO-Name}()
+	{
+		super({$Entity-Name}.class);
+	}
+	
+	@PersistenceContext(unitName="{$Persistence-Unit}")
+	private EntityManager em;
+	
+	@Override
+	public EntityManager getEntityManager()
+	{
+		return em;
+	}
+	
+	public {$TO-Name} createFromTO({$TO-Name} transferObject)
+	{
+		{$Entity-Name} entity = new {$Entity-Name}();
+
+		populateEntity(entity, transferObject);
+	    		
+	    return transferObject;
+	}
+	
+	public void updateFromTO({$TO-Name} transferObject)
+	{
+		{$Entity-Name} entity = find(transferObject.getId());
+		
+		if (entity == null)
+			throw new ObjectDoesNotExistException("Entity not found", null, {$Entity-Name}.class, transferObject.getId());
+		
+		checkOptimisticVersionConflict(entity, transferObject);
+
+		populateEntity(entity, transferObject);
+		
+	    return transferObject;
+	}
+	
+	private void populateEntity({$Entity-Name} entity, {$TO-Name} transferObject)
+	{
+		[$REPEAT-BLOCK Name="Field", InstanceID="Field"]
+		entity.set{$Field-Name-U}(transferObject.get{$Field-Name-U}());
+	    [$REPEAT-END]
+	}
+}

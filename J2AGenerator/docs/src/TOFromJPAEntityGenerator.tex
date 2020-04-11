@@ -1,0 +1,189 @@
+
+% Document class
+% LaTeX2e instead of 2.09
+
+\documentclass[ngerman,		% english text
+					11pt,			% fontsize 11 pt
+					openright,	% new chapters start on right page
+					onecolumn,	% text covers one column
+					titlepage,	% use title page
+					twoside,		% margins change for left and right page
+					a4paper,		% DIN-A4
+					pdftex	]		
+					{scrbook}
+
+%***********************************************************************************************
+%***********************************************************************************************
+%
+%		Packages
+%
+%***********************************************************************************************
+%***********************************************************************************************
+
+% Für deutsche Umlaute
+\usepackage[ngerman] {babel}
+
+% To include graphics and figures into the document
+\usepackage[pdftex] {graphicx}
+
+% For changing margin settings
+\usepackage {vmargin}
+
+% For defining colors
+\usepackage {color}
+
+% Better mathematical formulas
+\usepackage {amsmath}
+\usepackage {amssymb}
+\usepackage {amsthm}
+
+% For including arbitrary documents
+\usepackage{moreverb}
+
+% More on figures
+\usepackage{float}
+
+% Hyperlinking
+\usepackage[colorlinks, backref, linkcolor=blue, citecolor=green,%
+	plainpages=false,pdfpagelabels,bookmarksnumbered=true] {hyperref}
+
+% Tables in breadth-first format
+\usepackage{longtable}
+\usepackage{rotating}
+
+% For list of open issues
+\usepackage{makeidx}
+
+% For entries spanning multiple rows in a table
+\usepackage{multirow}
+
+% Jump to top of figure instead of bottom when following a link
+\usepackage[all]{hypcap}
+
+% For cool code listings
+\usepackage{listings}
+\lstloadlanguages{XML, HTML}
+
+% For umlaute
+\usepackage[ansinew]{inputenc}
+
+% Für schönere enumerates
+\usepackage{paralist}
+
+% Querformat
+\usepackage{lscape, pdflscape}
+
+\usepackage{color}
+\usepackage{colortbl}
+
+%***********************************************************************************************
+%***********************************************************************************************
+%
+%		Own environments and commands
+%
+%***********************************************************************************************
+%***********************************************************************************************
+
+
+%***********************************************************************************************
+%***********************************************************************************************
+%
+%		Global formatting options
+%
+%***********************************************************************************************
+%***********************************************************************************************
+
+\makeindex{}
+
+%###############################################################################################
+%###############################################################################################
+%
+%		Document start
+%
+%###############################################################################################
+%###############################################################################################
+
+\begin{document}
+
+% Avoid indentation for a new paragraph and set vertical space between paragraphs
+\parindent 0pt
+\parskip 10pt
+
+%===============================================================================================
+%		Definitions
+%===============================================================================================
+
+\definecolor{tabellengrau}{rgb}{0.75,0.75,0.75}
+
+% Cell padding within tables (1 is default, more means more padding in table cells)
+\def\arraystretch{1.75}
+
+\newcommand{\TOGenVersion}{0.5}
+\newcommand{\TOGenNextVersion}{0.6}
+
+%===============================================================================================
+%		Title
+%===============================================================================================
+
+% Nur für die Titelseite: Zum exakten Zentrieren!
+\addtolength{\topmargin}{4.5cm}
+\addtolength{\oddsidemargin}{1cm}
+
+\begin{titlepage}
+
+	\begin{center}
+	
+	% Titel
+	{\huge \textbf{\textsf{TO-Generator aus JPA-Entities}}\par}
+	{\Large \textbf{Spezifikation}\par}
+	
+	\vspace{2.5cm}
+	
+	{\large Jens Ebert\par}
+	{\large \textbf{Status:} \-- in Arbeit \--\par}
+	{\large \textbf{Version:} 0.1\par}
+	
+	\vspace{2.5cm}
+	
+	\end{center}
+	
+	\vspace{8.5cm}
+	
+	{\normalsize \textbf{\textsf{
+		\today
+	}}}
+
+\end{titlepage}
+
+% Nur für die Titelseite: "Exaktes Zentrieren" wieder rückgängig
+\addtolength{\topmargin}{-4.5cm}
+\addtolength{\oddsidemargin}{-1cm}
+
+%===============================================================================================
+%		Main matter
+%===============================================================================================
+
+\mainmatter{}
+
+% Mit arabischen Ziffern weiter nummerieren
+\pagenumbering{arabic}
+
+%-----------------------------------------------------------------------------------------------
+%		Introduction
+%-----------------------------------------------------------------------------------------------
+
+\input{content/Introduction}
+\input{content/BasicConcepts}
+\input{content/DesignDerUmsetzung}
+\input{content/Test}
+\input{content/Ausblick}
+
+\end{document}
+
+%###############################################################################################
+%###############################################################################################
+%
+%		Document end
+%
+%###############################################################################################
+%###############################################################################################

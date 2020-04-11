@@ -1,0 +1,23 @@
+package de.fhunii.templates;
+package {$Package-Name};
+
+/**
+ * {@link {$CTO-Name}} is a transport object with several attributes.
+ *
+ * @author {$Author}
+ */
+public class {$CTO-Name} extends AbstractGenericCTO<{$PkeyTO-Name},{$DataTO-Name}>
+{
+	/**
+	 * Creates a new {@link {$CTO-Name}}.
+	 *
+	 * @param pkeyTO The {@link {$PkeyTO-Name}} part of this {@link {$CTO-Name}}.
+	 * @param dataTO The {@link {$DataTO-Name}} part of this {@link {$CTO-Name}}.
+	 */
+	public {$CTO-Name}({$PkeyTO-Name} pkeyTO, {$DataTO-Name} dataTO)
+	{
+		super(pkeyTO, dataTO);
+	}
+
+	private static final long serialVersionUID = 1L;
+}
