@@ -1,0 +1,33 @@
+* J2A
+** IN PROGRESS J2A erste Stufe
+   :LOGBOOK:
+   - State "IN PROGRESS" from "TODO"       [2020-02-10 Mo 21:41]
+   :END:
+   :CLOCK:
+   CLOCK: [2020-04-11 Sa 19:24]--[2020-04-11 Sa 20:15] =>  0:51
+   CLOCK: [2020-04-11 Sa 18:30]--[2020-04-11 Sa 23:24] =>  4:54
+   CLOCK: [2020-04-04 Sa 10:20]--[2020-04-04 Sa 12:46] =>  2:26
+   CLOCK: [2020-02-23 So 21:27]--[2020-02-24 Mo 01:02] =>  3:35
+   CLOCK: [2020-02-23 So 19:29]--[2020-02-23 So 19:54] =>  0:25
+   CLOCK: [2020-02-22 Sa 23:44]--[2020-02-23 So 11:15] => 11:31
+   CLOCK: [2020-02-10 Mo 19:41]--[2020-02-10 Mo 21:41] =>  2:00
+   :END:
+
+*** IN PROGRESS Vorgehen
+
+ - Repo abspalten:
+   - Neues Projekt
+   - Sachen für J2A rüberkopieren
+   - Altes Zeug aus MGC löschen
+   - Neues Repo
+   - Packages umbennen
+   - pom.xml sauberziehen
+   - Backup einrichten
+ - Eclipse-Plugin-Projekt vorbereiten und einchecken
+ - Links auf Eclipse RCP
+ - Hauptrechner nachziehen:
+   - Daten-Veracrypt kopieren
+   - RCP-Link
+   - Passwörter Keepass einrichten
+   - JDKs synchronisieren (alle nutzen OpenJKD 12!!!)
+   - Alle Builds laufen
