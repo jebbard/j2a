@@ -3,7 +3,7 @@ Bundle-ManifestVersion: 2
 Bundle-Name: J2a-eclipse-plugin
 Bundle-SymbolicName: j2a-eclipse-plugin;singleton:=true
 Bundle-Version: 1.0.0.qualifier
-Bundle-Activator: j2a_eclipse_plugin.Activator
+Bundle-Activator: com.github.j2a.eclipseplugin.activator.Activator
 Require-Bundle: org.eclipse.ui,
  org.eclipse.core.runtime,
  org.eclipse.jdt.core;bundle-version="3.21.0",

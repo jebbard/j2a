@@ -12,6 +12,8 @@ package de.je.utils.j2a.template;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 
+import com.github.j2a.core.template.UTF8TextPosition;
+
 /**
  * {@link UTF8TextPosition} tests the {@link UTF8TextPosition} class.
  */

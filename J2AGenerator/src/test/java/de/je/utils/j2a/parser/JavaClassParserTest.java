@@ -20,16 +20,18 @@ import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 
-import de.je.utils.j2a.config.J2AConfiguration;
+import com.github.j2a.core.config.J2AConfiguration;
+import com.github.j2a.core.parser.ReflectionJavaClassParser;
+import com.github.j2a.core.parser.declaration.AbstractJavaElementDeclaration;
+import com.github.j2a.core.parser.declaration.JavaClassDeclaration;
+import com.github.j2a.core.parser.declaration.JavaClassType;
+import com.github.j2a.core.parser.declaration.JavaElementVisibility;
+import com.github.j2a.core.parser.declaration.JavaFieldDeclaration;
+import com.github.j2a.core.parser.declaration.JavaMethodDeclaration;
+import com.github.j2a.core.parser.declaration.JavaParameterDeclaration;
+
 import de.je.utils.j2a.parser.TestClass.InnerTestClass;
 import de.je.utils.j2a.parser.TestClass.TestEnum;
-import de.je.utils.j2a.parser.declaration.AbstractJavaElementDeclaration;
-import de.je.utils.j2a.parser.declaration.JavaClassDeclaration;
-import de.je.utils.j2a.parser.declaration.JavaClassType;
-import de.je.utils.j2a.parser.declaration.JavaElementVisibility;
-import de.je.utils.j2a.parser.declaration.JavaFieldDeclaration;
-import de.je.utils.j2a.parser.declaration.JavaMethodDeclaration;
-import de.je.utils.j2a.parser.declaration.JavaParameterDeclaration;
 
 /**
  * {@link JavaClassParserTest}

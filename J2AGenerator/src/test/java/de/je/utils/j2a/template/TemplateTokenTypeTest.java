@@ -12,6 +12,8 @@ package de.je.utils.j2a.template;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 
+import com.github.j2a.core.template.TemplateTokenType;
+
 /**
  * {@link TemplateTokenTypeTest} checks the utility methods of the
  * {@link TemplateTokenType} class.

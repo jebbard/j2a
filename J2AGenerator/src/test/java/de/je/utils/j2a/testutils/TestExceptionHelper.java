@@ -12,8 +12,8 @@ package de.je.utils.j2a.testutils;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.function.Executable;
 
-import de.je.utils.j2a.template.InvalidTemplateException;
-import de.je.utils.j2a.template.UTF8TextPosition;
+import com.github.j2a.core.template.InvalidTemplateException;
+import com.github.j2a.core.template.UTF8TextPosition;
 
 /**
  * {@link TestExceptionHelper}

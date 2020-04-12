@@ -15,7 +15,13 @@ import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 
-import de.je.utils.j2a.template.InvalidTemplateException.ExceptionCode;
+import com.github.j2a.core.template.TemplateToken;
+import com.github.j2a.core.template.TemplateTokenType;
+import com.github.j2a.core.template.UTF8TextPosition;
+import com.github.j2a.core.template.VariableReference;
+import com.github.j2a.core.template.VariableReferenceParser;
+import com.github.j2a.core.template.InvalidTemplateException.ExceptionCode;
+
 import de.je.utils.j2a.testutils.TestExceptionHelper;
 
 /**
