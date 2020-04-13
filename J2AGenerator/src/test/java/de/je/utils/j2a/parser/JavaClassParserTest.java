@@ -21,14 +21,14 @@ import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 
 import com.github.j2a.core.config.J2AConfiguration;
+import com.github.j2a.core.definition.AbstractJavaElementDefinition;
+import com.github.j2a.core.definition.JavaClassDefinition;
+import com.github.j2a.core.definition.JavaClassType;
+import com.github.j2a.core.definition.JavaElementVisibility;
+import com.github.j2a.core.definition.JavaFieldDefinition;
+import com.github.j2a.core.definition.JavaMethodDefinition;
+import com.github.j2a.core.definition.JavaParameterDefinition;
 import com.github.j2a.core.parser.ReflectionJavaClassParser;
-import com.github.j2a.core.parser.declaration.AbstractJavaElementDeclaration;
-import com.github.j2a.core.parser.declaration.JavaClassDeclaration;
-import com.github.j2a.core.parser.declaration.JavaClassType;
-import com.github.j2a.core.parser.declaration.JavaElementVisibility;
-import com.github.j2a.core.parser.declaration.JavaFieldDeclaration;
-import com.github.j2a.core.parser.declaration.JavaMethodDeclaration;
-import com.github.j2a.core.parser.declaration.JavaParameterDeclaration;
 
 import de.je.utils.j2a.parser.TestClass.InnerTestClass;
 import de.je.utils.j2a.parser.TestClass.TestEnum;
@@ -41,7 +41,7 @@ class JavaClassParserTest {
 
 	@Test
 	public void parseClassDeclaration_forMostComplexClass_returnsAllClassProperties() {
-		JavaClassDeclaration classDeclaration = new ReflectionJavaClassParser(
+		JavaClassDefinition classDeclaration = new ReflectionJavaClassParser(
 			new J2AConfiguration(Set.of(TestClass.class.getPackageName()))).parse(TestClass.class);
 
 		assertClassDeclarationIsValid(classDeclaration, JavaClassType.CLASS, TestClass.class,
@@ -58,7 +58,7 @@ class JavaClassParserTest {
 		Assertions.assertEquals(4, classDeclaration.getFields().size());
 		Assertions.assertEquals(6, classDeclaration.getMethods().size());
 
-		JavaClassDeclaration nestedEnumDeclaration = assertHasReferencedClassWithType(TestEnum.class,
+		JavaClassDefinition nestedEnumDeclaration = assertHasReferencedClassWithType(TestEnum.class,
 			classDeclaration.getNestedClasses());
 
 		assertClassDeclarationIsValid(nestedEnumDeclaration, JavaClassType.ENUM, TestEnum.class,
@@ -81,7 +81,7 @@ class JavaClassParserTest {
 		// TODO assert enum constants (X,Y,Z + ENUM$VALUES
 		// TODO assert enum generated methods (valueOf, values and Std Constructor)
 
-		JavaClassDeclaration secondNestedClassDeclaration = assertHasReferencedClassWithType(InnerTestClass.class,
+		JavaClassDefinition secondNestedClassDeclaration = assertHasReferencedClassWithType(InnerTestClass.class,
 			classDeclaration.getNestedClasses());
 
 		assertClassDeclarationIsValid(secondNestedClassDeclaration, JavaClassType.CLASS, InnerTestClass.class,
@@ -95,7 +95,7 @@ class JavaClassParserTest {
 		Assertions.assertEquals(2, secondNestedClassDeclaration.getFields().size());
 		Assertions.assertEquals(2, secondNestedClassDeclaration.getMethods().size());
 
-		JavaMethodDeclaration sncdFirstMethod = assertHasMethod(secondNestedClassDeclaration, "myInnerMethod", 0,
+		JavaMethodDefinition sncdFirstMethod = assertHasMethod(secondNestedClassDeclaration, "myInnerMethod", 0,
 			JavaElementVisibility.PACKAGE_PRIVATE, void.class, false, false);
 		Assertions.assertEquals(false, sncdFirstMethod.isAbstract());
 		Assertions.assertEquals(false, sncdFirstMethod.isBridge());
@@ -106,38 +106,38 @@ class JavaClassParserTest {
 		Assertions.assertEquals(false, sncdFirstMethod.isSynchronized());
 		Assertions.assertEquals(false, sncdFirstMethod.isVarArgs());
 
-		JavaFieldDeclaration sncdFirstField = assertHasField(secondNestedClassDeclaration,
+		JavaFieldDefinition sncdFirstField = assertHasField(secondNestedClassDeclaration,
 			JavaElementVisibility.PRIVATE, long.class, "serialVersionUID", true, true);
 		Assertions.assertEquals(false, sncdFirstField.isTransient());
 		Assertions.assertEquals(false, sncdFirstField.isVolatile());
 
-		JavaFieldDeclaration sncdSecondField = assertHasField(secondNestedClassDeclaration,
+		JavaFieldDefinition sncdSecondField = assertHasField(secondNestedClassDeclaration,
 			JavaElementVisibility.PACKAGE_PRIVATE, int.class, "myInnerProp", false, false);
 		Assertions.assertEquals(false, sncdSecondField.isTransient());
 		Assertions.assertEquals(false, sncdSecondField.isVolatile());
 
 		// Outer classes' fields
-		JavaFieldDeclaration firstField = assertHasField(classDeclaration, JavaElementVisibility.PACKAGE_PRIVATE,
+		JavaFieldDefinition firstField = assertHasField(classDeclaration, JavaElementVisibility.PACKAGE_PRIVATE,
 			Boolean.class, "TEST", false, true);
 		Assertions.assertEquals(false, firstField.isTransient());
 		Assertions.assertEquals(false, firstField.isVolatile());
 
-		JavaFieldDeclaration secondField = assertHasField(classDeclaration, JavaElementVisibility.PUBLIC, String.class,
+		JavaFieldDefinition secondField = assertHasField(classDeclaration, JavaElementVisibility.PUBLIC, String.class,
 			"TEST_2", true, true);
 		Assertions.assertEquals(false, secondField.isTransient());
 		Assertions.assertEquals(false, secondField.isVolatile());
 
-		JavaFieldDeclaration thirdField = assertHasField(classDeclaration, JavaElementVisibility.PRIVATE, int.class,
+		JavaFieldDefinition thirdField = assertHasField(classDeclaration, JavaElementVisibility.PRIVATE, int.class,
 			"myInt", true, false);
 		Assertions.assertEquals(true, thirdField.isTransient());
 		Assertions.assertEquals(false, thirdField.isVolatile());
 
-		JavaFieldDeclaration fourthField = assertHasField(classDeclaration, JavaElementVisibility.PROTECTED,
+		JavaFieldDefinition fourthField = assertHasField(classDeclaration, JavaElementVisibility.PROTECTED,
 			AtomicLong.class, "x", false, false);
 		Assertions.assertEquals(false, fourthField.isTransient());
 		Assertions.assertEquals(true, fourthField.isVolatile());
 
-		JavaMethodDeclaration firstMethod = assertHasMethod(classDeclaration, "myGenericMethod", 3,
+		JavaMethodDefinition firstMethod = assertHasMethod(classDeclaration, "myGenericMethod", 3,
 			JavaElementVisibility.PUBLIC, List.class, false, true, SafeVarargs.class);
 		Assertions.assertEquals(false, firstMethod.isAbstract());
 		Assertions.assertEquals(false, firstMethod.isBridge());
@@ -151,7 +151,7 @@ class JavaClassParserTest {
 		assertHasMethodParam(firstMethod, 1, "arg1", int.class, false);
 		assertHasMethodParam(firstMethod, 2, "arg2", long[].class, false);
 
-		JavaMethodDeclaration secondMethod = assertHasMethod(classDeclaration, TestClass.class.getSimpleName(), 2,
+		JavaMethodDefinition secondMethod = assertHasMethod(classDeclaration, TestClass.class.getSimpleName(), 2,
 			JavaElementVisibility.PUBLIC, TestClass.class, false, false);
 
 		Assertions.assertEquals(false, secondMethod.isAbstract());
@@ -166,7 +166,7 @@ class JavaClassParserTest {
 		assertHasMethodParam(secondMethod, 0, "arg0", int.class, false);
 		assertHasMethodParam(secondMethod, 1, "arg1", AtomicLong.class, false);
 
-		JavaMethodDeclaration thirdMethod = assertHasMethod(classDeclaration, TestClass.class.getSimpleName(), 0,
+		JavaMethodDefinition thirdMethod = assertHasMethod(classDeclaration, TestClass.class.getSimpleName(), 0,
 			JavaElementVisibility.PACKAGE_PRIVATE, TestClass.class, false, false);
 		Assertions.assertEquals(false, thirdMethod.isAbstract());
 		Assertions.assertEquals(false, thirdMethod.isBridge());
@@ -177,7 +177,7 @@ class JavaClassParserTest {
 		Assertions.assertEquals(false, thirdMethod.isSynchronized());
 		Assertions.assertEquals(false, thirdMethod.isVarArgs());
 
-		JavaMethodDeclaration fourthMethod = assertHasMethod(classDeclaration, "doStuff", 1,
+		JavaMethodDefinition fourthMethod = assertHasMethod(classDeclaration, "doStuff", 1,
 			JavaElementVisibility.PUBLIC, void.class, false, false);
 		Assertions.assertEquals(false, fourthMethod.isAbstract());
 		Assertions.assertEquals(false, fourthMethod.isBridge());
@@ -190,7 +190,7 @@ class JavaClassParserTest {
 
 		assertHasMethodParam(fourthMethod, 0, "arg0", String[].class, false);
 
-		JavaMethodDeclaration fifthMethod = assertHasMethod(classDeclaration, "myStupidNativeMethod", 1,
+		JavaMethodDefinition fifthMethod = assertHasMethod(classDeclaration, "myStupidNativeMethod", 1,
 			JavaElementVisibility.PROTECTED, Long.class, false, false);
 		Assertions.assertEquals(false, fifthMethod.isAbstract());
 		Assertions.assertEquals(false, fifthMethod.isBridge());
@@ -203,7 +203,7 @@ class JavaClassParserTest {
 
 		assertHasMethodParam(fifthMethod, 0, "arg0", int.class, false);
 
-		JavaMethodDeclaration sixthMethod = assertHasMethod(classDeclaration, "getMyInt", 0,
+		JavaMethodDefinition sixthMethod = assertHasMethod(classDeclaration, "getMyInt", 0,
 			JavaElementVisibility.PACKAGE_PRIVATE, int.class, false, false);
 		Assertions.assertEquals(false, sixthMethod.isAbstract());
 		Assertions.assertEquals(false, sixthMethod.isBridge());
@@ -218,7 +218,7 @@ class JavaClassParserTest {
 
 	@Test
 	public void parseClassDeclaration_forSimpleInterface_returnsAllInterfaceProperties() {
-		JavaClassDeclaration classDeclaration = new ReflectionJavaClassParser(
+		JavaClassDefinition classDeclaration = new ReflectionJavaClassParser(
 			new J2AConfiguration(Set.of(TestInterface1.class.getPackageName()))).parse(TestInterface1.class);
 
 		assertClassDeclarationIsValid(classDeclaration, JavaClassType.INTERFACE, TestInterface1.class,
@@ -232,7 +232,7 @@ class JavaClassParserTest {
 		Assertions.assertEquals(0, classDeclaration.getFields().size());
 		Assertions.assertEquals(1, classDeclaration.getMethods().size());
 
-		JavaMethodDeclaration firstMethodDeclaration = assertHasMethod(classDeclaration, "doStuff", 1,
+		JavaMethodDefinition firstMethodDeclaration = assertHasMethod(classDeclaration, "doStuff", 1,
 			JavaElementVisibility.PUBLIC, void.class, false, false);
 		Assertions.assertEquals(false, firstMethodDeclaration.isAbstract());
 		Assertions.assertEquals(false, firstMethodDeclaration.isBridge());
@@ -247,7 +247,7 @@ class JavaClassParserTest {
 		assertHasMethodParam(firstMethodDeclaration, 0, "arg0", String[].class, false);
 	}
 
-	private void assertClassDeclarationIsValid(JavaClassDeclaration classDeclaration, JavaClassType classType,
+	private void assertClassDeclarationIsValid(JavaClassDefinition classDeclaration, JavaClassType classType,
 		Class<?> expectedType, JavaElementVisibility expectedVisibility, Class<?> expectedBaseClass,
 		boolean expectedFinal, boolean expectedStatic, Class<?>... expectedClassAnnotations) {
 		assertIsType(expectedType, classDeclaration);
@@ -264,7 +264,7 @@ class JavaClassParserTest {
 		Assertions.assertEquals(expectedStatic, classDeclaration.isStatic());
 	}
 
-	private void assertHasAnnotations(AbstractJavaElementDeclaration elementToCheck,
+	private void assertHasAnnotations(AbstractJavaElementDefinition elementToCheck,
 		Class<?>... expectedElementAnnotations) {
 		Assertions.assertEquals(expectedElementAnnotations.length, elementToCheck.getAnnotations().size());
 
@@ -273,10 +273,10 @@ class JavaClassParserTest {
 		}
 	}
 
-	private JavaFieldDeclaration assertHasField(JavaClassDeclaration secondNestedClassDeclaration,
+	private JavaFieldDefinition assertHasField(JavaClassDefinition secondNestedClassDeclaration,
 		JavaElementVisibility expectedVisibility, Class<?> expectedFieldType, String expectedFieldName,
 		boolean expectedFinal, boolean expectedStatic, Class<?>... expectedFieldAnnotations) {
-		JavaFieldDeclaration fieldToCheck = assertHasFieldWithName(expectedFieldName, secondNestedClassDeclaration);
+		JavaFieldDefinition fieldToCheck = assertHasFieldWithName(expectedFieldName, secondNestedClassDeclaration);
 		Assertions.assertEquals(expectedVisibility, fieldToCheck.getVisibility());
 		assertIsType(expectedFieldType, fieldToCheck.getType());
 		assertHasAnnotations(fieldToCheck, expectedFieldAnnotations);
@@ -286,8 +286,8 @@ class JavaClassParserTest {
 		return fieldToCheck;
 	}
 
-	private JavaFieldDeclaration assertHasFieldWithName(String name, JavaClassDeclaration classDeclaration) {
-		Optional<JavaFieldDeclaration> firstElementWithName = classDeclaration.getFields().stream()
+	private JavaFieldDefinition assertHasFieldWithName(String name, JavaClassDefinition classDeclaration) {
+		Optional<JavaFieldDefinition> firstElementWithName = classDeclaration.getFields().stream()
 			.filter(c -> c.getName().equals(name)).findFirst();
 
 		Assertions.assertTrue(firstElementWithName.isPresent());
@@ -295,10 +295,10 @@ class JavaClassParserTest {
 		return firstElementWithName.get();
 	}
 
-	private JavaMethodDeclaration assertHasMethod(JavaClassDeclaration classDeclaration, String expectedMethodName,
+	private JavaMethodDefinition assertHasMethod(JavaClassDefinition classDeclaration, String expectedMethodName,
 		int expectedParamCount, JavaElementVisibility expectedVisibility, Class<?> expectedReturnType,
 		boolean expectedFinal, boolean expectedStatic, Class<?>... expectedAnnotations) {
-		JavaMethodDeclaration method = assertHasMethodWithNameAndParamCount(expectedMethodName, classDeclaration,
+		JavaMethodDefinition method = assertHasMethodWithNameAndParamCount(expectedMethodName, classDeclaration,
 			expectedParamCount);
 		Assertions.assertEquals(expectedVisibility, method.getVisibility());
 		assertIsType(expectedReturnType, method.getReturnType());
@@ -308,9 +308,9 @@ class JavaClassParserTest {
 		return method;
 	}
 
-	private void assertHasMethodParam(JavaMethodDeclaration fifthMethod, int paramIndex, String expectedParamName,
+	private void assertHasMethodParam(JavaMethodDefinition fifthMethod, int paramIndex, String expectedParamName,
 		Class<?> expectedParamType, boolean expectedFinal, Class<?>... expectedParamAnnotations) {
-		JavaParameterDeclaration fifFirstParam = fifthMethod.getParameters().get(paramIndex);
+		JavaParameterDefinition fifFirstParam = fifthMethod.getParameters().get(paramIndex);
 
 		Assertions.assertEquals(expectedParamName, fifFirstParam.getName());
 		assertIsType(expectedParamType, fifFirstParam.getType());
@@ -318,11 +318,11 @@ class JavaClassParserTest {
 		assertHasAnnotations(fifFirstParam, expectedParamAnnotations);
 	}
 
-	private JavaMethodDeclaration assertHasMethodWithNameAndParamCount(String name,
-		JavaClassDeclaration classDeclaration, int paramCount) {
-		Set<JavaMethodDeclaration> elementsWithName = classDeclaration.getMethods().stream()
+	private JavaMethodDefinition assertHasMethodWithNameAndParamCount(String name,
+		JavaClassDefinition classDeclaration, int paramCount) {
+		Set<JavaMethodDefinition> elementsWithName = classDeclaration.getMethods().stream()
 			.filter(c -> c.getName().equals(name)).collect(Collectors.toSet());
-		Optional<JavaMethodDeclaration> firstElementWithNameAndParamCount = elementsWithName.stream()
+		Optional<JavaMethodDefinition> firstElementWithNameAndParamCount = elementsWithName.stream()
 			.filter(c -> c.getParameters().size() == paramCount).findFirst();
 
 		Assertions.assertTrue(firstElementWithNameAndParamCount.isPresent());
@@ -330,9 +330,9 @@ class JavaClassParserTest {
 		return firstElementWithNameAndParamCount.get();
 	}
 
-	private JavaClassDeclaration assertHasReferencedClassWithType(Class<?> type,
-		List<JavaClassDeclaration> classDeclarations) {
-		Optional<JavaClassDeclaration> firstElementWithName = classDeclarations.stream().filter(c -> isType(c, type))
+	private JavaClassDefinition assertHasReferencedClassWithType(Class<?> type,
+		List<JavaClassDefinition> classDeclarations) {
+		Optional<JavaClassDefinition> firstElementWithName = classDeclarations.stream().filter(c -> isType(c, type))
 			.findFirst();
 
 		Assertions.assertTrue(firstElementWithName.isPresent());
@@ -340,14 +340,14 @@ class JavaClassParserTest {
 		return firstElementWithName.get();
 	}
 
-	private void assertIsType(Class<?> expectedType, JavaClassDeclaration classDeclaration) {
+	private void assertIsType(Class<?> expectedType, JavaClassDefinition classDeclaration) {
 		Assertions.assertNotNull(classDeclaration);
 		Assertions.assertEquals(expectedType.getSimpleName(), classDeclaration.getName());
 		Assertions.assertEquals(expectedType.getPackageName(), classDeclaration.getPackageName());
 		Assertions.assertEquals(expectedType.isPrimitive(), classDeclaration.isPrimitive());
 	}
 
-	private boolean isType(JavaClassDeclaration classDeclaration, Class<?> expectedType) {
+	private boolean isType(JavaClassDefinition classDeclaration, Class<?> expectedType) {
 		return expectedType.getSimpleName().equals(classDeclaration.getName())
 			&& expectedType.getPackageName().equals(classDeclaration.getPackageName())
 			&& expectedType.isPrimitive() == classDeclaration.isPrimitive();

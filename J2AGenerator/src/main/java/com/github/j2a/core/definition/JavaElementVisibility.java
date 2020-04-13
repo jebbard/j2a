@@ -7,7 +7,7 @@
  * @date 10.02.2020
  *
  */
-package com.github.j2a.core.parser.declaration;
+package com.github.j2a.core.definition;
 
 import java.lang.reflect.Modifier;
 

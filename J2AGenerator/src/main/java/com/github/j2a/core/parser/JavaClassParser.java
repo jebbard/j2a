@@ -9,14 +9,14 @@
  */
 package com.github.j2a.core.parser;
 
-import com.github.j2a.core.parser.declaration.JavaClassDeclaration;
+import com.github.j2a.core.definition.JavaClassDefinition;
 
 /**
  * {@link JavaClassParser} parses Java classes in diverse forms and returns a
- * {@link JavaClassDeclaration} instance.
+ * {@link JavaClassDefinition} instance.
  *
  * @param <I> The type of input form the Java class is represented as
  */
 public interface JavaClassParser<I> {
-	JavaClassDeclaration parse(I inputClass);
+	JavaClassDefinition parse(I inputClass);
 }

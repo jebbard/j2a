@@ -26,12 +26,12 @@ import java.util.Map;
 import java.util.stream.Collectors;
 
 import com.github.j2a.core.config.J2AConfiguration;
-import com.github.j2a.core.parser.declaration.JavaClassDeclaration;
-import com.github.j2a.core.parser.declaration.JavaClassType;
-import com.github.j2a.core.parser.declaration.JavaElementVisibility;
-import com.github.j2a.core.parser.declaration.JavaFieldDeclaration;
-import com.github.j2a.core.parser.declaration.JavaMethodDeclaration;
-import com.github.j2a.core.parser.declaration.JavaParameterDeclaration;
+import com.github.j2a.core.definition.JavaClassDefinition;
+import com.github.j2a.core.definition.JavaClassType;
+import com.github.j2a.core.definition.JavaElementVisibility;
+import com.github.j2a.core.definition.JavaFieldDefinition;
+import com.github.j2a.core.definition.JavaMethodDefinition;
+import com.github.j2a.core.definition.JavaParameterDefinition;
 
 /**
  * {@link ReflectionJavaClassParser} parses Java classes based on a {@link Class} instance.
@@ -57,7 +57,7 @@ public class ReflectionJavaClassParser implements JavaClassParser<Class<?>> {
 
 	private final J2AConfiguration configuration;
 
-	private final Map<Class<?>, JavaClassDeclaration> parsedClassCache = new HashMap<>();
+	private final Map<Class<?>, JavaClassDefinition> parsedClassCache = new HashMap<>();
 
 	public ReflectionJavaClassParser(J2AConfiguration configuration) {
 		if (configuration == null) {
@@ -68,11 +68,11 @@ public class ReflectionJavaClassParser implements JavaClassParser<Class<?>> {
 	}
 
 	@Override
-	public JavaClassDeclaration parse(Class<?> classToParse) {
+	public JavaClassDefinition parse(Class<?> classToParse) {
 		return parseClass(classToParse);
 	}
 
-	private List<JavaClassDeclaration> parseAnnotations(AnnotatedElement annotatedElement) {
+	private List<JavaClassDefinition> parseAnnotations(AnnotatedElement annotatedElement) {
 		if (annotatedElement == Target.class || annotatedElement == Retention.class
 			|| annotatedElement == Documented.class || annotatedElement == Inherited.class) {
 			return new ArrayList<>();
@@ -82,7 +82,7 @@ public class ReflectionJavaClassParser implements JavaClassParser<Class<?>> {
 			.collect(Collectors.toList());
 	}
 
-	private JavaClassDeclaration parseClass(Class<?> classToParse) {
+	private JavaClassDefinition parseClass(Class<?> classToParse) {
 		if (classToParse == null) {
 			return null;
 		}
@@ -107,7 +107,7 @@ public class ReflectionJavaClassParser implements JavaClassParser<Class<?>> {
 
 		boolean isInnerClass = classToParse.isMemberClass();
 
-		JavaClassDeclaration javaClassDeclaration = new JavaClassDeclaration(classToParse, isFinal, name, visibility,
+		JavaClassDefinition javaClassDeclaration = new JavaClassDefinition(classToParse, isFinal, name, visibility,
 			isStatic, classType, isInnerClass, packageName, isAbstract, isStrictFp, isApplicationClass,
 			classToParse.isPrimitive());
 
@@ -120,7 +120,7 @@ public class ReflectionJavaClassParser implements JavaClassParser<Class<?>> {
 			javaClassDeclaration.setBaseClass(parseClass(classToParse.getSuperclass()));
 			javaClassDeclaration.setImplementedInterfaces(
 				Arrays.stream(classToParse.getInterfaces()).map(this::parseClass).collect(Collectors.toList()));
-			List<JavaMethodDeclaration> methods = Arrays.stream(classToParse.getDeclaredMethods())
+			List<JavaMethodDefinition> methods = Arrays.stream(classToParse.getDeclaredMethods())
 				.map(m -> parseExecutable(m, false, parseClass(m.getReturnType()), m.isDefault(), m.isBridge()))
 				.collect(Collectors.toList());
 			methods.addAll(Arrays.stream(classToParse.getDeclaredConstructors())
@@ -136,8 +136,8 @@ public class ReflectionJavaClassParser implements JavaClassParser<Class<?>> {
 		return javaClassDeclaration;
 	}
 
-	private JavaMethodDeclaration parseExecutable(Executable executableToParse, boolean isConstructor,
-		JavaClassDeclaration returnType, boolean isDefault, boolean isBridge) {
+	private JavaMethodDefinition parseExecutable(Executable executableToParse, boolean isConstructor,
+		JavaClassDefinition returnType, boolean isDefault, boolean isBridge) {
 		if (executableToParse == null) {
 			throw new IllegalArgumentException("Constructor/method to parse must not be null");
 		}
@@ -145,7 +145,7 @@ public class ReflectionJavaClassParser implements JavaClassParser<Class<?>> {
 		boolean isFinal = Modifier.isFinal(executableToParse.getModifiers());
 		String name = isConstructor ? executableToParse.getDeclaringClass().getSimpleName()
 			: executableToParse.getName();
-		List<JavaClassDeclaration> annotations = parseAnnotations(executableToParse);
+		List<JavaClassDefinition> annotations = parseAnnotations(executableToParse);
 		boolean isStatic = Modifier.isStatic(executableToParse.getModifiers());
 		JavaElementVisibility visibility = JavaElementVisibility.fromModifier(executableToParse.getModifiers());
 
@@ -156,22 +156,22 @@ public class ReflectionJavaClassParser implements JavaClassParser<Class<?>> {
 		boolean isSynthetic = executableToParse.isSynthetic();
 		boolean isVarArgs = executableToParse.isVarArgs();
 
-		List<JavaParameterDeclaration> parameterDeclarations = Arrays.stream(executableToParse.getParameters())
+		List<JavaParameterDefinition> parameterDeclarations = Arrays.stream(executableToParse.getParameters())
 			.map(this::parseParameter).collect(Collectors.toList());
 
-		return new JavaMethodDeclaration(isFinal, name, annotations, visibility, isStatic, isConstructor,
+		return new JavaMethodDefinition(isFinal, name, annotations, visibility, isStatic, isConstructor,
 			isSynchronized, isNative, isAbstract, isStrictFp, isBridge, isSynthetic, isDefault, isVarArgs, returnType,
 			parameterDeclarations);
 	}
 
-	private JavaFieldDeclaration parseField(Field fieldToParse) {
+	private JavaFieldDefinition parseField(Field fieldToParse) {
 		if (fieldToParse == null) {
 			throw new IllegalArgumentException("Field to parse must not be null");
 		}
 
 		boolean isFinal = Modifier.isFinal(fieldToParse.getModifiers());
 		String name = fieldToParse.getName();
-		List<JavaClassDeclaration> annotations = parseAnnotations(fieldToParse);
+		List<JavaClassDefinition> annotations = parseAnnotations(fieldToParse);
 		boolean isStatic = Modifier.isStatic(fieldToParse.getModifiers());
 		JavaElementVisibility visibility = JavaElementVisibility.fromModifier(fieldToParse.getModifiers());
 
@@ -179,23 +179,23 @@ public class ReflectionJavaClassParser implements JavaClassParser<Class<?>> {
 		boolean isVolatile = Modifier.isVolatile(fieldToParse.getModifiers());
 		boolean isTransient = Modifier.isTransient(fieldToParse.getModifiers());
 
-		JavaClassDeclaration fieldType = parseClass(fieldToParse.getType());
+		JavaClassDefinition fieldType = parseClass(fieldToParse.getType());
 
-		return new JavaFieldDeclaration(isFinal, name, annotations, visibility, isStatic, isVolatile, isTransient,
+		return new JavaFieldDefinition(isFinal, name, annotations, visibility, isStatic, isVolatile, isTransient,
 			fieldType, isSynthetic);
 	}
 
-	private JavaParameterDeclaration parseParameter(Parameter parameterToParse) {
+	private JavaParameterDefinition parseParameter(Parameter parameterToParse) {
 		if (parameterToParse == null) {
 			throw new IllegalArgumentException("Parameter to parse must not be null");
 		}
 
 		boolean isFinal = Modifier.isFinal(parameterToParse.getModifiers());
 		String name = parameterToParse.getName();
-		List<JavaClassDeclaration> annotations = parseAnnotations(parameterToParse);
+		List<JavaClassDefinition> annotations = parseAnnotations(parameterToParse);
 
-		JavaClassDeclaration parameterType = parseClass(parameterToParse.getType());
+		JavaClassDefinition parameterType = parseClass(parameterToParse.getType());
 
-		return new JavaParameterDeclaration(isFinal, name, annotations, parameterType);
+		return new JavaParameterDefinition(isFinal, name, annotations, parameterType);
 	}
 }

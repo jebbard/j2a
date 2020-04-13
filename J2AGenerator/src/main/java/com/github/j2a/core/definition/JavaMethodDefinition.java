@@ -1,20 +1,20 @@
 /**
  *
- * {@link JavaMethodDeclaration}.java
+ * {@link JavaMethodDefinition}.java
  *
  * @author Jens Ebert
  *
  * @date 10.02.2020
  *
  */
-package com.github.j2a.core.parser.declaration;
+package com.github.j2a.core.definition;
 
 import java.util.List;
 
 /**
- * {@link JavaMethodDeclaration} represents a method declaration in Java.
+ * {@link JavaMethodDefinition} represents a method declaration in Java.
  */
-public class JavaMethodDeclaration extends AbstractScopedJavaElementDeclaration {
+public class JavaMethodDefinition extends AbstractScopedJavaElementDefinition {
 	private final boolean isConstructor;
 	private final boolean isSynchronized;
 	private final boolean isNative;
@@ -25,15 +25,15 @@ public class JavaMethodDeclaration extends AbstractScopedJavaElementDeclaration 
 	private final boolean isDefault;
 	private final boolean isVarArgs;
 
-	private final JavaClassDeclaration returnType;
+	private final JavaClassDefinition returnType;
 
-	private final List<JavaParameterDeclaration> parameterDeclarations;
+	private final List<JavaParameterDefinition> parameterDeclarations;
 
-	public JavaMethodDeclaration(boolean isFinal, String name, List<JavaClassDeclaration> annotations,
+	public JavaMethodDefinition(boolean isFinal, String name, List<JavaClassDefinition> annotations,
 		JavaElementVisibility visibility, boolean isStatic, boolean isConstructor, boolean isSynchronized,
 		boolean isNative, boolean isAbstract, boolean isStrictFp, boolean isBridge, boolean isSynthetic,
-		boolean isDefault, boolean isVarArgs, JavaClassDeclaration returnType,
-		List<JavaParameterDeclaration> parameterDeclarations) {
+		boolean isDefault, boolean isVarArgs, JavaClassDefinition returnType,
+		List<JavaParameterDefinition> parameterDeclarations) {
 		super(isFinal, name, visibility, isStatic);
 		this.isConstructor = isConstructor;
 		this.isSynchronized = isSynchronized;
@@ -49,11 +49,11 @@ public class JavaMethodDeclaration extends AbstractScopedJavaElementDeclaration 
 		setAnnotations(annotations);
 	}
 
-	public List<JavaParameterDeclaration> getParameters() {
+	public List<JavaParameterDefinition> getParameters() {
 		return parameterDeclarations;
 	}
 
-	public JavaClassDeclaration getReturnType() {
+	public JavaClassDefinition getReturnType() {
 		return returnType;
 	}
 

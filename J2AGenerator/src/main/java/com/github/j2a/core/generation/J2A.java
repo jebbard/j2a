@@ -15,8 +15,8 @@ import java.nio.file.Path;
 import java.util.Set;
 
 import com.github.j2a.core.config.J2AConfiguration;
+import com.github.j2a.core.definition.JavaClassDefinition;
 import com.github.j2a.core.parser.ReflectionJavaClassParser;
-import com.github.j2a.core.parser.declaration.JavaClassDeclaration;
 
 /**
  * {@link J2A}
@@ -24,12 +24,12 @@ import com.github.j2a.core.parser.declaration.JavaClassDeclaration;
  */
 public class J2A {
 	public void generateOutputFromClass(String appBasePackage, Class<?> sourceClass, Path outputBasePath,
-		OutputGenerator... generators) {
-		JavaClassDeclaration classDefinition = new ReflectionJavaClassParser(
+		Generator... generators) {
+		JavaClassDefinition classDefinition = new ReflectionJavaClassParser(
 			new J2AConfiguration(Set.of(appBasePackage))).parse(sourceClass);
 
-		for (OutputGenerator outputGenerator : generators) {
-			GeneratorResult result = outputGenerator.generateOutput(classDefinition);
+		for (Generator outputGenerator : generators) {
+			GeneratorResult result = outputGenerator.generateResult(classDefinition);
 
 			Path targetOutputPath = outputBasePath.resolve(result.getOutputRelativeTargetPath());
 
@@ -39,5 +39,13 @@ public class J2A {
 				throw new RuntimeException("", e);
 			}
 		}
+	}
+
+	public Generator getGenerator(String fullyQualifiedClassName, Path[] classpath) {
+		return null;
+	}
+
+	public GeneratorGroup getGeneratorGroup(String fullyQualifiedClassName, Path[] classpath) {
+		return null;
 	}
 }

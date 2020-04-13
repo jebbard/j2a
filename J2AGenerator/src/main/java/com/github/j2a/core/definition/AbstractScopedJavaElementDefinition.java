@@ -1,26 +1,26 @@
 /**
  *
- * {@link AbstractScopedJavaElementDeclaration}.java
+ * {@link AbstractScopedJavaElementDefinition}.java
  *
  * @author Jens Ebert
  *
  * @date 10.02.2020
  *
  */
-package com.github.j2a.core.parser.declaration;
+package com.github.j2a.core.definition;
 
 /**
- * {@link AbstractScopedJavaElementDeclaration} represents Java declarations
+ * {@link AbstractScopedJavaElementDefinition} represents Java declarations
  * containing an explicit visibility and class or instance scope such as field
  * or method declarations.
  *
  */
-public class AbstractScopedJavaElementDeclaration extends AbstractJavaElementDeclaration {
+public class AbstractScopedJavaElementDefinition extends AbstractJavaElementDefinition {
 
 	private final JavaElementVisibility visibility;
 	private final boolean isStatic;
 
-	public AbstractScopedJavaElementDeclaration(boolean isFinal, String name, JavaElementVisibility visibility,
+	public AbstractScopedJavaElementDefinition(boolean isFinal, String name, JavaElementVisibility visibility,
 		boolean isStatic) {
 		super(isFinal, name);
 		this.visibility = visibility;

@@ -7,6 +7,9 @@ import org.eclipse.core.commands.AbstractHandler;
 import org.eclipse.core.commands.ExecutionEvent;
 import org.eclipse.core.commands.ExecutionException;
 import org.eclipse.core.runtime.CoreException;
+import org.eclipse.jdt.core.IClasspathEntry;
+import org.eclipse.jdt.core.IJavaProject;
+import org.eclipse.jdt.core.JavaCore;
 import org.eclipse.jdt.core.search.IJavaSearchConstants;
 import org.eclipse.jdt.core.search.SearchEngine;
 import org.eclipse.jdt.core.search.SearchMatch;
@@ -23,7 +26,17 @@ public class J2AContextMenuHandler extends AbstractHandler {
 	public Object execute(ExecutionEvent event) throws ExecutionException {
 		IWorkbenchWindow window = HandlerUtil.getActiveWorkbenchWindowChecked(event);
 
-		SearchPattern pattern = SearchPattern.createPattern("de.je.utils.j2a.generation.OutputGenerator",
+		/*
+		 * TODO
+		 *
+		 * 1. Suche alle Klassen, die GeneratorOutput oder GeneratorOutputGroup
+		 * implementieren 2. Ermittele das Projekt, in dem sich diese befinden und
+		 * dessen Classpath 3. Rufe J2A mit Klassenname und Classpath auf, und erhalte
+		 * Instanz von GneratorOutput oder GeneratorOutputGroup zurück 4. Puffere
+		 * Instanz und erhalte Name der Gruppe /Klasse
+		 */
+
+		SearchPattern pattern = SearchPattern.createPattern("com.github.j2a.core.generation.Generator",
 			IJavaSearchConstants.TYPE, IJavaSearchConstants.IMPLEMENTORS, SearchPattern.R_CASE_SENSITIVE);
 
 		SearchEngine engine = new SearchEngine();
@@ -37,7 +50,18 @@ public class J2AContextMenuHandler extends AbstractHandler {
 					@Override
 					public void acceptSearchMatch(SearchMatch arg0) throws CoreException {
 						System.out.println(arg0);
-						matches.add(arg0.getResource().getName());
+						matches.add(arg0.getResource().getLocation().toString());
+						matches.add(arg0.getResource().toString());
+
+						IJavaProject javaProject = JavaCore.create(arg0.getResource().getProject());
+
+						IClasspathEntry[] classPathEntries = javaProject.getResolvedClasspath(false);
+
+						for (IClasspathEntry classpathEntry : classPathEntries) {
+							matches.add(classpathEntry.getPath().toString());
+						}
+
+//						arg0.getResource().getProject().getWorkspace().getRoot().get
 					}
 				}, null);
 		} catch (CoreException e) {

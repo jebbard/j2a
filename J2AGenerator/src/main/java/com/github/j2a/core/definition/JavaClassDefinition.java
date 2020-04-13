@@ -1,21 +1,21 @@
 /**
  *
- * {@link JavaClassDeclaration}.java
+ * {@link JavaClassDefinition}.java
  *
  * @author Jens Ebert
  *
  * @date 10.02.2020
  *
  */
-package com.github.j2a.core.parser.declaration;
+package com.github.j2a.core.definition;
 
 import java.util.ArrayList;
 import java.util.List;
 
 /**
- * {@link JavaClassDeclaration} represents a Java class, interface, enum or annotation declaration.
+ * {@link JavaClassDefinition} represents a Java class, interface, enum or annotation declaration.
  */
-public class JavaClassDeclaration extends AbstractScopedJavaElementDeclaration {
+public class JavaClassDefinition extends AbstractScopedJavaElementDefinition {
 	private final Class<?> sourceClass;
 	private final JavaClassType classType;
 	private final boolean isInnerClass;
@@ -25,13 +25,13 @@ public class JavaClassDeclaration extends AbstractScopedJavaElementDeclaration {
 	private final boolean isApplicationClass;
 	private final boolean isPrimitive;
 
-	private JavaClassDeclaration baseClass;
-	private List<JavaClassDeclaration> implementedInterfaces = new ArrayList<>();
-	private List<JavaMethodDeclaration> methods = new ArrayList<>();
-	private List<JavaFieldDeclaration> fields = new ArrayList<>();
-	private List<JavaClassDeclaration> nestedClasses = new ArrayList<>();
+	private JavaClassDefinition baseClass;
+	private List<JavaClassDefinition> implementedInterfaces = new ArrayList<>();
+	private List<JavaMethodDefinition> methods = new ArrayList<>();
+	private List<JavaFieldDefinition> fields = new ArrayList<>();
+	private List<JavaClassDefinition> nestedClasses = new ArrayList<>();
 
-	public JavaClassDeclaration(Class<?> sourceClass, boolean isFinal, String name, JavaElementVisibility visibility,
+	public JavaClassDefinition(Class<?> sourceClass, boolean isFinal, String name, JavaElementVisibility visibility,
 		boolean isStatic, JavaClassType classType, boolean isInnerClass, String packageName, boolean isAbstract,
 		boolean isStrictFp, boolean isApplicationClass, boolean isPrimitive) {
 		super(isFinal, name, visibility, isStatic);
@@ -45,11 +45,11 @@ public class JavaClassDeclaration extends AbstractScopedJavaElementDeclaration {
 		this.isPrimitive = isPrimitive;
 	}
 
-	public JavaClassDeclaration getBaseClass() {
+	public JavaClassDefinition getBaseClass() {
 		return baseClass;
 	}
 
-	public JavaClassDeclaration getBaseClassOrInterface() {
+	public JavaClassDefinition getBaseClassOrInterface() {
 		return baseClass;
 	}
 
@@ -57,19 +57,19 @@ public class JavaClassDeclaration extends AbstractScopedJavaElementDeclaration {
 		return classType;
 	}
 
-	public List<JavaFieldDeclaration> getFields() {
+	public List<JavaFieldDefinition> getFields() {
 		return fields;
 	}
 
-	public List<JavaClassDeclaration> getImplementedInterfaces() {
+	public List<JavaClassDefinition> getImplementedInterfaces() {
 		return implementedInterfaces;
 	}
 
-	public List<JavaMethodDeclaration> getMethods() {
+	public List<JavaMethodDefinition> getMethods() {
 		return methods;
 	}
 
-	public List<JavaClassDeclaration> getNestedClasses() {
+	public List<JavaClassDefinition> getNestedClasses() {
 		return nestedClasses;
 	}
 
@@ -101,23 +101,23 @@ public class JavaClassDeclaration extends AbstractScopedJavaElementDeclaration {
 		return isStrictFp;
 	}
 
-	public void setBaseClass(JavaClassDeclaration baseClass) {
+	public void setBaseClass(JavaClassDefinition baseClass) {
 		this.baseClass = baseClass;
 	}
 
-	public void setFields(List<JavaFieldDeclaration> fields) {
+	public void setFields(List<JavaFieldDefinition> fields) {
 		this.fields = fields;
 	}
 
-	public void setImplementedInterfaces(List<JavaClassDeclaration> implementedInterfaces) {
+	public void setImplementedInterfaces(List<JavaClassDefinition> implementedInterfaces) {
 		this.implementedInterfaces = implementedInterfaces;
 	}
 
-	public void setMethods(List<JavaMethodDeclaration> methods) {
+	public void setMethods(List<JavaMethodDefinition> methods) {
 		this.methods = methods;
 	}
 
-	public void setNestedClasses(List<JavaClassDeclaration> nestedClasses) {
+	public void setNestedClasses(List<JavaClassDefinition> nestedClasses) {
 		this.nestedClasses = nestedClasses;
 	}
 

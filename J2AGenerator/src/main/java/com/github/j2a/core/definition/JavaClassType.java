@@ -7,7 +7,7 @@
  * @date 10.02.2020
  *
  */
-package com.github.j2a.core.parser.declaration;
+package com.github.j2a.core.definition;
 
 /**
  * {@link JavaClassType} represents the kind of class a declaration refers to.

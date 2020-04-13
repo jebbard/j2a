@@ -1,28 +1,28 @@
 /**
  *
- * {@link JavaFieldDeclaration}.java
+ * {@link JavaFieldDefinition}.java
  *
  * @author Jens Ebert
  *
  * @date 10.02.2020
  *
  */
-package com.github.j2a.core.parser.declaration;
+package com.github.j2a.core.definition;
 
 import java.util.List;
 
 /**
- * {@link JavaFieldDeclaration} represents a field declaration in Java.
+ * {@link JavaFieldDefinition} represents a field declaration in Java.
  */
-public class JavaFieldDeclaration extends AbstractScopedJavaElementDeclaration {
+public class JavaFieldDefinition extends AbstractScopedJavaElementDefinition {
 	private final boolean isVolatile;
 	private final boolean isTransient;
 	private final boolean isSynthetic;
-	private final JavaClassDeclaration type;
+	private final JavaClassDefinition type;
 
-	public JavaFieldDeclaration(boolean isFinal, String name, List<JavaClassDeclaration> annotations,
+	public JavaFieldDefinition(boolean isFinal, String name, List<JavaClassDefinition> annotations,
 		JavaElementVisibility visibility, boolean isStatic, boolean isVolatile, boolean isTransient,
-		JavaClassDeclaration type, boolean isSynthetic) {
+		JavaClassDefinition type, boolean isSynthetic) {
 		super(isFinal, name, visibility, isStatic);
 		this.isVolatile = isVolatile;
 		this.isTransient = isTransient;
@@ -31,14 +31,14 @@ public class JavaFieldDeclaration extends AbstractScopedJavaElementDeclaration {
 		setAnnotations(annotations);
 	}
 
-	public JavaFieldDeclaration(JavaFieldDeclaration other, String adaptedName, Class<?> adaptedType) {
+	public JavaFieldDefinition(JavaFieldDefinition other, String adaptedName, Class<?> adaptedType) {
 		this(other.isFinal(), adaptedName, other.getAnnotations(), other.getVisibility(), other.isStatic(),
 			other.isVolatile, other.isTransient(),
-			new JavaClassDeclaration(adaptedType, false, "", null, false, null, false, "", false, false, false, false),
+			new JavaClassDefinition(adaptedType, false, "", null, false, null, false, "", false, false, false, false),
 			other.isSynthetic());
 	}
 
-	public JavaClassDeclaration getType() {
+	public JavaClassDefinition getType() {
 		return type;
 	}
 

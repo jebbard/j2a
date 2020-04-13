@@ -14,7 +14,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.regex.Pattern;
 
-import com.github.j2a.core.parser.declaration.JavaFieldDeclaration;
+import com.github.j2a.core.definition.JavaFieldDefinition;
 import com.github.javaparser.JavaParser;
 import com.github.javaparser.ast.CompilationUnit;
 import com.github.javaparser.ast.ImportDeclaration;
@@ -122,7 +122,7 @@ public class JavaClassBuilder {
 		return this;
 	}
 
-	public JavaClassBuilder withProperty(JavaFieldDeclaration fieldForProperty) {
+	public JavaClassBuilder withProperty(JavaFieldDefinition fieldForProperty) {
 		jpDeclaration.addField(fieldForProperty.getType().getSourceClass(), fieldForProperty.getName(),
 			fieldForProperty.getVisibility().toJavaParserKeyword());
 		methods.add(createGetter(fieldForProperty));
@@ -148,7 +148,7 @@ public class JavaClassBuilder {
 		return this;
 	}
 
-	private MethodDeclaration createGetter(JavaFieldDeclaration fieldDefinition) {
+	private MethodDeclaration createGetter(JavaFieldDefinition fieldDefinition) {
 
 		MethodDeclaration getter = new MethodDeclaration();
 		getter.setName(new SimpleName("get" + CaseHelper.toCapitalCase(fieldDefinition.getName())));
@@ -159,7 +159,7 @@ public class JavaClassBuilder {
 		return getter;
 	}
 
-	private MethodDeclaration createSetter(JavaFieldDeclaration fieldDefinition) {
+	private MethodDeclaration createSetter(JavaFieldDefinition fieldDefinition) {
 
 		MethodDeclaration setter = new MethodDeclaration();
 		setter.setName(new SimpleName("set" + CaseHelper.toCapitalCase(fieldDefinition.getName())));
