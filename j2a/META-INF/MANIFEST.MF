@@ -1,0 +1,14 @@
+Manifest-Version: 1.0
+Bundle-ManifestVersion: 2
+Bundle-Name: J2a
+Bundle-SymbolicName: j2a
+Bundle-Version: 1.0.0
+Bundle-ClassPath: j2a-0.0.1-SNAPSHOT.jar
+Export-Package: com.github.j2a.core.config,
+ com.github.j2a.core.definition,
+ com.github.j2a.core.generation,
+ com.github.j2a.core.parser,
+ com.github.j2a.core.template,
+ com.github.j2a.core.utils
+Require-Bundle: org.eclipse.core.runtime
+Automatic-Module-Name: j2a
