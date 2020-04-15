@@ -9,7 +9,6 @@
  */
 package com.github.j2a.core.utils;
 
-import java.lang.annotation.Annotation;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.regex.Pattern;
@@ -17,7 +16,6 @@ import java.util.regex.Pattern;
 import com.github.j2a.core.definition.JavaFieldDefinition;
 import com.github.javaparser.JavaParser;
 import com.github.javaparser.ast.CompilationUnit;
-import com.github.javaparser.ast.ImportDeclaration;
 import com.github.javaparser.ast.Modifier.Keyword;
 import com.github.javaparser.ast.NodeList;
 import com.github.javaparser.ast.body.ClassOrInterfaceDeclaration;
@@ -41,19 +39,21 @@ import com.github.javaparser.ast.type.VoidType;
  *
  */
 public class JavaClassBuilder {
-	public static JavaClassBuilder createClass(String packageName, String className) {
-		CompilationUnit unit = new CompilationUnit(packageName);
+	public static JavaClassBuilder createClass(FullyQualifiedJavaClass fullyQualifiedJavaClass) {
+		CompilationUnit unit = new CompilationUnit(fullyQualifiedJavaClass.getPackageName());
 
-		return new JavaClassBuilder(unit, unit.addClass(className, Keyword.PUBLIC));
+		return new JavaClassBuilder(unit, unit.addClass(fullyQualifiedJavaClass.getClassName(), Keyword.PUBLIC));
 	}
 
-	public static JavaClassBuilder createInterface(String packageName, String className) {
-		CompilationUnit unit = new CompilationUnit(packageName);
+	public static JavaClassBuilder createInterface(FullyQualifiedJavaClass fullyQualifiedJavaClass) {
+		CompilationUnit unit = new CompilationUnit(fullyQualifiedJavaClass.getPackageName());
 
-		return new JavaClassBuilder(unit, unit.addInterface(className, Keyword.PUBLIC));
+		return new JavaClassBuilder(unit, unit.addInterface(fullyQualifiedJavaClass.getClassName(), Keyword.PUBLIC));
 	}
 
 	private final List<MethodDeclaration> methods = new ArrayList<>();
+
+	private final List<String> importStatements = new ArrayList<>();
 
 	private final ClassOrInterfaceDeclaration jpDeclaration;
 
@@ -68,35 +68,30 @@ public class JavaClassBuilder {
 		// Add property getters and setters after all fields only
 		methods.forEach(m -> jpDeclaration.addMember(m));
 
-		// Clean up imports: Any import that is referring to the same package as the compilation unit is unnecessary and
-		// removed
-		NodeList<ImportDeclaration> imports = unit.getImports();
-
-		List<ImportDeclaration> importsToRemove = new ArrayList<>();
-
-		for (ImportDeclaration importDec : imports) {
-			String nameAsString = importDec.getNameAsString();
-
-			String removedOwnPackage = nameAsString
+		// Add import statements
+		for (String importStatement : importStatements) {
+			String removedOwnPackage = importStatement
 				.replaceAll(Pattern.quote(unit.getPackageDeclaration().get().getNameAsString() + "."), "");
-			if (removedOwnPackage.length() != nameAsString.length() && !removedOwnPackage.contains(".")) {
-				importsToRemove.add(importDec);
+			if (removedOwnPackage.length() == importStatement.length() || removedOwnPackage.contains(".")) {
+				unit.addImport(importStatement);
 			}
 		}
-
-		importsToRemove.forEach(i -> unit.remove(i));
 
 		return unit.toString();
 	}
 
-	public JavaClassBuilder extending(Class<?> extendedClass, String... extendedClassTypeArgs) {
-		jpDeclaration.addExtendedType(extendedClass);
+	public JavaClassBuilder extending(FullyQualifiedJavaClass extendedClass,
+		FullyQualifiedJavaClass... extendedClassTypeArgs) {
+		jpDeclaration.addExtendedType(extendedClass.getClassName());
+		importStatements.add(extendedClass.getFullyQualifiedName());
 
 		if (extendedClassTypeArgs.length > 0) {
 			List<Type> typeArguments = new ArrayList<>();
 
-			for (String extendedClassTypeArg : extendedClassTypeArgs) {
-				typeArguments.add(new JavaParser().parseClassOrInterfaceType(extendedClassTypeArg).getResult().get());
+			for (FullyQualifiedJavaClass extendedClassTypeArg : extendedClassTypeArgs) {
+				typeArguments.add(
+					new JavaParser().parseClassOrInterfaceType(extendedClassTypeArg.getClassName()).getResult().get());
+				importStatements.add(extendedClassTypeArg.getFullyQualifiedName());
 			}
 			jpDeclaration.getExtendedTypes(0).setTypeArguments(new NodeList<>(typeArguments));
 		}
@@ -104,8 +99,9 @@ public class JavaClassBuilder {
 		return this;
 	}
 
-	public JavaClassBuilder withAnnotation(Class<? extends Annotation> annotation) {
-		jpDeclaration.addAnnotation(annotation);
+	public JavaClassBuilder withAnnotation(FullyQualifiedJavaClass annotation) {
+		jpDeclaration.addAnnotation(annotation.getClassName());
+		importStatements.add(annotation.getFullyQualifiedName());
 
 		return this;
 	}

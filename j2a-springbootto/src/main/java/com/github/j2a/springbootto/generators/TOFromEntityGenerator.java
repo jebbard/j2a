@@ -12,13 +12,13 @@ package com.github.j2a.springbootto.generators;
 import java.nio.file.Paths;
 
 import org.mycollection.games.server.games.impl.data.GameRelease;
-import org.mycollection.games.server.utils.AbstractTO;
 
 import com.github.j2a.core.definition.JavaClassDefinition;
 import com.github.j2a.core.definition.JavaFieldDefinition;
 import com.github.j2a.core.generation.Generator;
 import com.github.j2a.core.generation.GeneratorResult;
 import com.github.j2a.core.generation.J2A;
+import com.github.j2a.core.utils.FullyQualifiedJavaClass;
 import com.github.j2a.core.utils.JavaClassBuilder;
 
 /**
@@ -45,11 +45,11 @@ public class TOFromEntityGenerator implements Generator {
 	 * @see com.github.j2a.core.generation.Generator#generateResult(com.github.j2a.core.definition.JavaClassDefinition)
 	 */
 	public GeneratorResult generateResult(JavaClassDefinition classDefinition) {
-		JavaClassBuilder builder = JavaClassBuilder.createClass("org.mycollection.games.server.games.api",
-			classDefinition.getName() + "TO");
+		JavaClassBuilder builder = JavaClassBuilder.createClass(
+			new FullyQualifiedJavaClass(classDefinition.getName() + "TO", "org.mycollection.games.server.games.api"));
 
 		builder.withClassJavadoc("A transport object for " + classDefinition.getName() + " entities.")
-			.extending(AbstractTO.class);
+			.extending(new FullyQualifiedJavaClass("org.mycollection.games.server.utils.AbstractTO"));
 
 		for (JavaFieldDefinition fieldDefinition : classDefinition.getFields()) {
 			if (!fieldDefinition.isFinal() && !fieldDefinition.isStatic() && !fieldDefinition.isTransient()

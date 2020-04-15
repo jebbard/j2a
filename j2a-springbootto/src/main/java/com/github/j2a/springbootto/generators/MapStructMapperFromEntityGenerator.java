@@ -11,14 +11,13 @@ package com.github.j2a.springbootto.generators;
 
 import java.nio.file.Paths;
 
-import org.mapstruct.Mapper;
 import org.mycollection.games.server.games.impl.data.GameRelease;
-import org.mycollection.games.server.utils.MGCMapper;
 
 import com.github.j2a.core.definition.JavaClassDefinition;
 import com.github.j2a.core.generation.Generator;
 import com.github.j2a.core.generation.GeneratorResult;
 import com.github.j2a.core.generation.J2A;
+import com.github.j2a.core.utils.FullyQualifiedJavaClass;
 import com.github.j2a.core.utils.JavaClassBuilder;
 
 /**
@@ -30,6 +29,7 @@ public class MapStructMapperFromEntityGenerator implements Generator {
 	public static void main(String[] args) {
 		J2A j2a = new J2A();
 
+		// TODO use Java parser for getting Java Class Decl
 		j2a.generateOutputFromClass("org.mycollection.games.server", GameRelease.class, Paths.get("."),
 			new MapStructMapperFromEntityGenerator());
 	}
@@ -45,14 +45,20 @@ public class MapStructMapperFromEntityGenerator implements Generator {
 	 * @see com.github.j2a.core.generation.Generator#generateResult(com.github.j2a.core.definition.JavaClassDefinition)
 	 */
 	public GeneratorResult generateResult(JavaClassDefinition classDefinition) {
-		JavaClassBuilder builder = JavaClassBuilder.createInterface("org.mycollection.games.server.games.impl.facade",
-			classDefinition.getName() + "Mapper");
+		String entitySimpleName = classDefinition.getName();
+		JavaClassBuilder builder = JavaClassBuilder.createInterface(new FullyQualifiedJavaClass(
+			entitySimpleName + "Mapper", "org.mycollection.games.server.games.impl.facade"));
+
+		// TODO derive TO package from entity package
+		String toName = entitySimpleName + "TO";
 
 		builder
-			.withClassJavadoc("A MapStruct mapper for mapping {@link " + classDefinition.getName()
-				+ "} entities to {@link " + classDefinition.getName() + "TO}s.")
-			.extending(MGCMapper.class, classDefinition.getName() + "TO", classDefinition.getName())
-			.withAnnotation(Mapper.class).withBodyComment("Intentionally empty");
+			.withClassJavadoc(
+				"A MapStruct mapper for mapping {@link " + entitySimpleName + "} entities to {@link " + toName + "}s.")
+			.extending(new FullyQualifiedJavaClass("org.mycollection.games.server.utils.MGCMapper"),
+				new FullyQualifiedJavaClass(toName, classDefinition.getPackageName()),
+				new FullyQualifiedJavaClass(entitySimpleName, classDefinition.getPackageName()))
+			.withAnnotation(new FullyQualifiedJavaClass("org.mapstruct.Mapper")).withBodyComment("Intentionally empty");
 
 		System.out.println(builder.build());
 

@@ -17,6 +17,7 @@ import com.github.j2a.core.definition.JavaClassDefinition;
 import com.github.j2a.core.generation.Generator;
 import com.github.j2a.core.generation.GeneratorResult;
 import com.github.j2a.core.generation.J2A;
+import com.github.j2a.core.utils.FullyQualifiedJavaClass;
 import com.github.j2a.core.utils.JavaClassBuilder;
 
 /**
@@ -43,16 +44,18 @@ public class ServiceInterfaceFromEntityGenerator implements Generator {
 	 * @see com.github.j2a.core.generation.Generator#generateResult(com.github.j2a.core.definition.JavaClassDefinition)
 	 */
 	public GeneratorResult generateResult(JavaClassDefinition classDefinition) {
-		JavaClassBuilder builder = JavaClassBuilder.createInterface("org.mycollection.games.server.games.api",
-			classDefinition.getName() + "Service");
+		String entitySimpleName = classDefinition.getName();
+		JavaClassBuilder builder = JavaClassBuilder.createInterface(new FullyQualifiedJavaClass(
+			entitySimpleName + "Service", "org.mycollection.games.server.games.api"));
 
+		String toSimpleName = entitySimpleName + "TO";
 		builder
-			.withClassJavadoc("A service for managing " + classDefinition.getName() + " entities using {@link "
-				+ classDefinition.getName() + "TO}s.")
-			.withSingleParamPublicMethod(classDefinition.getName() + "TO", "find" + classDefinition.getName() + "ById",
-				"Long", classDefinition.getName() + "Id", null)
-			.withSingleParamPublicMethod(classDefinition.getName() + "TO", "save" + classDefinition.getName(),
-				classDefinition.getName() + "TO", classDefinition.getName().toLowerCase(), null);
+			.withClassJavadoc("A service for managing " + entitySimpleName + " entities using {@link "
+				+ entitySimpleName + "TO}s.")
+			.withSingleParamPublicMethod(toSimpleName, "find" + entitySimpleName + "ById",
+				"Long", entitySimpleName + "Id", null)
+			.withSingleParamPublicMethod(toSimpleName, "save" + entitySimpleName,
+				toSimpleName, entitySimpleName.toLowerCase(), null);
 
 		System.out.println(builder.build());
 
