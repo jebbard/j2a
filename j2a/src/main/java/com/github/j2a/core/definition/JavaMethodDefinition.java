@@ -11,6 +11,8 @@ package com.github.j2a.core.definition;
 
 import java.util.List;
 
+import com.github.j2a.core.parser.JavaClassReference;
+
 /**
  * {@link JavaMethodDefinition} represents a method declaration in Java.
  */
@@ -25,14 +27,14 @@ public class JavaMethodDefinition extends AbstractScopedJavaElementDefinition {
 	private final boolean isDefault;
 	private final boolean isVarArgs;
 
-	private final JavaClassDefinition returnType;
+	private final JavaClassReference returnType;
 
 	private final List<JavaParameterDefinition> parameterDeclarations;
 
-	public JavaMethodDefinition(boolean isFinal, String name, List<JavaClassDefinition> annotations,
+	public JavaMethodDefinition(boolean isFinal, String name, List<JavaClassReference> annotations,
 		JavaElementVisibility visibility, boolean isStatic, boolean isConstructor, boolean isSynchronized,
 		boolean isNative, boolean isAbstract, boolean isStrictFp, boolean isBridge, boolean isSynthetic,
-		boolean isDefault, boolean isVarArgs, JavaClassDefinition returnType,
+		boolean isDefault, boolean isVarArgs, JavaClassReference returnType,
 		List<JavaParameterDefinition> parameterDeclarations) {
 		super(isFinal, name, visibility, isStatic);
 		this.isConstructor = isConstructor;
@@ -53,7 +55,7 @@ public class JavaMethodDefinition extends AbstractScopedJavaElementDefinition {
 		return parameterDeclarations;
 	}
 
-	public JavaClassDefinition getReturnType() {
+	public JavaClassReference getReturnType() {
 		return returnType;
 	}
 

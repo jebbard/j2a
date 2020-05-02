@@ -15,9 +15,11 @@ import org.mycollection.games.server.games.impl.data.GameRelease;
 
 import com.github.j2a.core.definition.JavaClassDefinition;
 import com.github.j2a.core.definition.JavaFieldDefinition;
+import com.github.j2a.core.generation.GenerationContext;
 import com.github.j2a.core.generation.Generator;
 import com.github.j2a.core.generation.GeneratorResult;
 import com.github.j2a.core.generation.J2A;
+import com.github.j2a.core.parser.JavaClassReference;
 import com.github.j2a.core.utils.FullyQualifiedJavaClass;
 import com.github.j2a.core.utils.JavaClassBuilder;
 
@@ -42,9 +44,10 @@ public class TOFromEntityGenerator implements Generator {
 	}
 
 	/**
-	 * @see com.github.j2a.core.generation.Generator#generateResult(com.github.j2a.core.definition.JavaClassDefinition)
+	 * @see com.github.j2a.core.generation.Generator#generateResult(com.github.j2a.core.definition.JavaClassDefinition,
+	 *      com.github.j2a.core.generation.GenerationContext)
 	 */
-	public GeneratorResult generateResult(JavaClassDefinition classDefinition) {
+	public GeneratorResult generateResult(JavaClassDefinition classDefinition, GenerationContext context) {
 		JavaClassBuilder builder = JavaClassBuilder.createClass(
 			new FullyQualifiedJavaClass(classDefinition.getName() + "TO", "org.mycollection.games.server.games.api"));
 
@@ -55,9 +58,9 @@ public class TOFromEntityGenerator implements Generator {
 			if (!fieldDefinition.isFinal() && !fieldDefinition.isStatic() && !fieldDefinition.isTransient()
 				&& !fieldDefinition.hasAnnotationByRegex(".*Transient")) {
 				if (fieldDefinition.hasAnnotationByRegex(".*ManyToOne|.*OneToMany|.*ManyToMany|.*OneToOne")) {
-					JavaClassDefinition fieldType = fieldDefinition.getType();
+					JavaClassReference fieldType = fieldDefinition.getType();
 
-					if (fieldType.isApplicationClass()) {
+					if (context.isApplicationClass(fieldType)) {
 						JavaFieldDefinition adaptedFieldDefinition = new JavaFieldDefinition(fieldDefinition,
 							fieldDefinition.getName() + "Id", Long.class);
 

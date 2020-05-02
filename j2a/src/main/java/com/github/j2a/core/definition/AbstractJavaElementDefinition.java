@@ -12,21 +12,23 @@ package com.github.j2a.core.definition;
 import java.util.ArrayList;
 import java.util.List;
 
+import com.github.j2a.core.parser.JavaClassReference;
+
 /**
- * {@link AbstractJavaElementDefinition} is the base class of all Java element declarations, it contains the properties
- * common to any Java declaration.
+ * {@link AbstractJavaElementDefinition} is the base class of all Java element
+ * declarations, it contains the properties common to any Java declaration.
  */
 public abstract class AbstractJavaElementDefinition {
 	private final boolean isFinal;
 	private final String name;
-	private List<JavaClassDefinition> annotations = new ArrayList<>();
+	private List<JavaClassReference> annotations = new ArrayList<>();
 
 	public AbstractJavaElementDefinition(boolean isFinal, String name) {
 		this.isFinal = isFinal;
 		this.name = name;
 	}
 
-	public List<JavaClassDefinition> getAnnotations() {
+	public List<JavaClassReference> getAnnotations() {
 		return annotations;
 	}
 
@@ -35,8 +37,8 @@ public abstract class AbstractJavaElementDefinition {
 	}
 
 	public boolean hasAnnotationByRegex(String annotationNameRegex) {
-		for (JavaClassDefinition annotation : annotations) {
-			if (annotation.getSourceClass().getName().matches(annotationNameRegex)) {
+		for (JavaClassReference annotation : annotations) {
+			if (annotation.getFullyQualifiedName().matches(annotationNameRegex)) {
 				return true;
 			}
 		}
@@ -48,7 +50,7 @@ public abstract class AbstractJavaElementDefinition {
 		return isFinal;
 	}
 
-	public void setAnnotations(List<JavaClassDefinition> annotations) {
+	public void setAnnotations(List<JavaClassReference> annotations) {
 		this.annotations = annotations;
 	}
 }

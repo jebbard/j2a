@@ -42,13 +42,13 @@ public class JavaClassBuilder {
 	public static JavaClassBuilder createClass(FullyQualifiedJavaClass fullyQualifiedJavaClass) {
 		CompilationUnit unit = new CompilationUnit(fullyQualifiedJavaClass.getPackageName());
 
-		return new JavaClassBuilder(unit, unit.addClass(fullyQualifiedJavaClass.getClassName(), Keyword.PUBLIC));
+		return new JavaClassBuilder(unit, unit.addClass(fullyQualifiedJavaClass.getName(), Keyword.PUBLIC));
 	}
 
 	public static JavaClassBuilder createInterface(FullyQualifiedJavaClass fullyQualifiedJavaClass) {
 		CompilationUnit unit = new CompilationUnit(fullyQualifiedJavaClass.getPackageName());
 
-		return new JavaClassBuilder(unit, unit.addInterface(fullyQualifiedJavaClass.getClassName(), Keyword.PUBLIC));
+		return new JavaClassBuilder(unit, unit.addInterface(fullyQualifiedJavaClass.getName(), Keyword.PUBLIC));
 	}
 
 	private final List<MethodDeclaration> methods = new ArrayList<>();
@@ -82,15 +82,15 @@ public class JavaClassBuilder {
 
 	public JavaClassBuilder extending(FullyQualifiedJavaClass extendedClass,
 		FullyQualifiedJavaClass... extendedClassTypeArgs) {
-		jpDeclaration.addExtendedType(extendedClass.getClassName());
+		jpDeclaration.addExtendedType(extendedClass.getName());
 		importStatements.add(extendedClass.getFullyQualifiedName());
 
 		if (extendedClassTypeArgs.length > 0) {
 			List<Type> typeArguments = new ArrayList<>();
 
 			for (FullyQualifiedJavaClass extendedClassTypeArg : extendedClassTypeArgs) {
-				typeArguments.add(
-					new JavaParser().parseClassOrInterfaceType(extendedClassTypeArg.getClassName()).getResult().get());
+				typeArguments
+					.add(new JavaParser().parseClassOrInterfaceType(extendedClassTypeArg.getName()).getResult().get());
 				importStatements.add(extendedClassTypeArg.getFullyQualifiedName());
 			}
 			jpDeclaration.getExtendedTypes(0).setTypeArguments(new NodeList<>(typeArguments));
@@ -100,7 +100,7 @@ public class JavaClassBuilder {
 	}
 
 	public JavaClassBuilder withAnnotation(FullyQualifiedJavaClass annotation) {
-		jpDeclaration.addAnnotation(annotation.getClassName());
+		jpDeclaration.addAnnotation(annotation.getName());
 		importStatements.add(annotation.getFullyQualifiedName());
 
 		return this;
@@ -119,8 +119,9 @@ public class JavaClassBuilder {
 	}
 
 	public JavaClassBuilder withProperty(JavaFieldDefinition fieldForProperty) {
-		jpDeclaration.addField(fieldForProperty.getType().getSourceClass(), fieldForProperty.getName(),
+		jpDeclaration.addField(fieldForProperty.getType().getName(), fieldForProperty.getName(),
 			fieldForProperty.getVisibility().toJavaParserKeyword());
+		importStatements.add(fieldForProperty.getType().getFullyQualifiedName());
 		methods.add(createGetter(fieldForProperty));
 		methods.add(createSetter(fieldForProperty));
 
@@ -149,7 +150,8 @@ public class JavaClassBuilder {
 		MethodDeclaration getter = new MethodDeclaration();
 		getter.setName(new SimpleName("get" + CaseHelper.toCapitalCase(fieldDefinition.getName())));
 		getter.setModifiers(Keyword.PUBLIC);
-		getter.setType(fieldDefinition.getType().getSourceClass());
+		getter.setType(fieldDefinition.getType().getName());
+		importStatements.add(fieldDefinition.getType().getFullyQualifiedName());
 		getter.setBody(new BlockStmt(new NodeList<>(new ReturnStmt(fieldDefinition.getName()))));
 
 		return getter;
@@ -160,7 +162,8 @@ public class JavaClassBuilder {
 		MethodDeclaration setter = new MethodDeclaration();
 		setter.setName(new SimpleName("set" + CaseHelper.toCapitalCase(fieldDefinition.getName())));
 		setter.setModifiers(Keyword.PUBLIC);
-		setter.addParameter(fieldDefinition.getType().getSourceClass(), fieldDefinition.getName());
+		setter.addParameter(fieldDefinition.getType().getName(), fieldDefinition.getName());
+		importStatements.add(fieldDefinition.getType().getFullyQualifiedName());
 		setter.setType(new VoidType());
 		setter.setBody(new BlockStmt(new NodeList<>(
 			new ExpressionStmt(new AssignExpr(new FieldAccessExpr(new ThisExpr(), fieldDefinition.getName()),

@@ -16,11 +16,11 @@ import com.github.j2a.core.definition.JavaClassDefinition;
  *
  */
 public interface Generator {
-	GeneratorResult generateResult(JavaClassDefinition classDefinition);
+	boolean canGenerateResult(JavaClassDefinition classDefinition);
+
+	GeneratorResult generateResult(JavaClassDefinition classDefinition, GenerationContext context);
 
 	String getDescription();
 
 	String getName();
-
-	boolean canGenerateResult(JavaClassDefinition classDefinition);
 }

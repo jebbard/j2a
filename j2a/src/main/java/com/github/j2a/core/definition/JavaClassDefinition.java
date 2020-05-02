@@ -12,10 +12,13 @@ package com.github.j2a.core.definition;
 import java.util.ArrayList;
 import java.util.List;
 
+import com.github.j2a.core.parser.JavaClassReference;
+
 /**
- * {@link JavaClassDefinition} represents a Java class, interface, enum or annotation declaration.
+ * {@link JavaClassDefinition} represents a Java class, interface, enum or
+ * annotation declaration.
  */
-public class JavaClassDefinition extends AbstractScopedJavaElementDefinition {
+public class JavaClassDefinition extends AbstractScopedJavaElementDefinition implements JavaClassReference {
 	private final Class<?> sourceClass;
 	private final JavaClassType classType;
 	private final boolean isInnerClass;
@@ -25,8 +28,8 @@ public class JavaClassDefinition extends AbstractScopedJavaElementDefinition {
 	private final boolean isApplicationClass;
 	private final boolean isPrimitive;
 
-	private JavaClassDefinition baseClass;
-	private List<JavaClassDefinition> implementedInterfaces = new ArrayList<>();
+	private JavaClassReference baseClassOrInterface;
+	private List<JavaClassReference> implementedInterfaces = new ArrayList<>();
 	private List<JavaMethodDefinition> methods = new ArrayList<>();
 	private List<JavaFieldDefinition> fields = new ArrayList<>();
 	private List<JavaClassDefinition> nestedClasses = new ArrayList<>();
@@ -45,12 +48,8 @@ public class JavaClassDefinition extends AbstractScopedJavaElementDefinition {
 		this.isPrimitive = isPrimitive;
 	}
 
-	public JavaClassDefinition getBaseClass() {
-		return baseClass;
-	}
-
-	public JavaClassDefinition getBaseClassOrInterface() {
-		return baseClass;
+	public JavaClassReference getBaseClassOrInterface() {
+		return baseClassOrInterface;
 	}
 
 	public JavaClassType getClassType() {
@@ -61,7 +60,12 @@ public class JavaClassDefinition extends AbstractScopedJavaElementDefinition {
 		return fields;
 	}
 
-	public List<JavaClassDefinition> getImplementedInterfaces() {
+	@Override
+	public String getFullyQualifiedName() {
+		return packageName + "." + getName();
+	}
+
+	public List<JavaClassReference> getImplementedInterfaces() {
 		return implementedInterfaces;
 	}
 
@@ -73,6 +77,7 @@ public class JavaClassDefinition extends AbstractScopedJavaElementDefinition {
 		return nestedClasses;
 	}
 
+	@Override
 	public String getPackageName() {
 		return packageName;
 	}
@@ -101,15 +106,15 @@ public class JavaClassDefinition extends AbstractScopedJavaElementDefinition {
 		return isStrictFp;
 	}
 
-	public void setBaseClass(JavaClassDefinition baseClass) {
-		this.baseClass = baseClass;
+	public void setBaseClassOrInterface(JavaClassReference baseClass) {
+		baseClassOrInterface = baseClass;
 	}
 
 	public void setFields(List<JavaFieldDefinition> fields) {
 		this.fields = fields;
 	}
 
-	public void setImplementedInterfaces(List<JavaClassDefinition> implementedInterfaces) {
+	public void setImplementedInterfaces(List<JavaClassReference> implementedInterfaces) {
 		this.implementedInterfaces = implementedInterfaces;
 	}
 

@@ -35,7 +35,8 @@ public class J2A {
 			new J2AConfiguration(Set.of(appBasePackage))).parse(sourceClass);
 
 		for (Generator outputGenerator : generators) {
-			GeneratorResult result = outputGenerator.generateResult(classDefinition);
+			GeneratorResult result = outputGenerator.generateResult(classDefinition,
+				new GenerationContext(appBasePackage));
 
 			Path targetOutputPath = outputBasePath.resolve(result.getOutputRelativeTargetPath());
 

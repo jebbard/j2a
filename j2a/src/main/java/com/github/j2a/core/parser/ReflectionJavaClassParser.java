@@ -34,23 +34,28 @@ import com.github.j2a.core.definition.JavaMethodDefinition;
 import com.github.j2a.core.definition.JavaParameterDefinition;
 
 /**
- * {@link ReflectionJavaClassParser} parses Java classes based on a {@link Class} instance.
+ * {@link ReflectionJavaClassParser} parses Java classes based on a
+ * {@link Class} instance.
  *
  * The following limitations apply to this kind of {@link JavaClassParser}:
  * <ul>
- * <li>Clearly, a reflection-based parser cannot extract method bodies or comments, neither Javadoc or standard Java
- * comments</li>
+ * <li>Clearly, a reflection-based parser cannot extract method bodies or
+ * comments, neither Javadoc or standard Java comments</li>
  * <li>Furthermore, we cannot get the imports defined in a compilation unit</li>
- * <li>Parameter names are only obtainable if the corresponding class was compiled with the -parameters flag since Java
- * 8, otherwise we get just numbered parameter names such as arg0, arg1 and so on</li>
- * <li>Of course, due to type erasure, we cannot get as much details about generic template arguments and concrete types
- * used as we could hope for</li>
- * <li>The order of nested classes, methods, fields or annotation of an element cannot be guaranteed, i.e. these
- * elements might not appear in the same order as defined in the source (or even class) file. Method and constructor
- * parameters are always guaranteed to be returned in their declaration order, though.</li>
- * <li>Any annotations with Retention SOURCE are eliminated by the compiler and do not appear in the class file, thus
- * they cannot be returned</li>
- * <li>The keyword final in front of parameters does not make it into the class file</li>
+ * <li>Parameter names are only obtainable if the corresponding class was
+ * compiled with the -parameters flag since Java 8, otherwise we get just
+ * numbered parameter names such as arg0, arg1 and so on</li>
+ * <li>Of course, due to type erasure, we cannot get as much details about
+ * generic template arguments and concrete types used as we could hope for</li>
+ * <li>The order of nested classes, methods, fields or annotation of an element
+ * cannot be guaranteed, i.e. these elements might not appear in the same order
+ * as defined in the source (or even class) file. Method and constructor
+ * parameters are always guaranteed to be returned in their declaration order,
+ * though.</li>
+ * <li>Any annotations with Retention SOURCE are eliminated by the compiler and
+ * do not appear in the class file, thus they cannot be returned</li>
+ * <li>The keyword final in front of parameters does not make it into the class
+ * file</li>
  * </ul>
  */
 public class ReflectionJavaClassParser implements JavaClassParser<Class<?>> {
@@ -72,7 +77,15 @@ public class ReflectionJavaClassParser implements JavaClassParser<Class<?>> {
 		return parseClass(classToParse);
 	}
 
-	private List<JavaClassDefinition> parseAnnotations(AnnotatedElement annotatedElement) {
+	/**
+	 * @see com.github.j2a.core.parser.JavaClassParser#supportsCompileRetentionAnnotations()
+	 */
+	@Override
+	public boolean supportsCompileRetentionAnnotations() {
+		return false;
+	}
+
+	private List<JavaClassReference> parseAnnotations(AnnotatedElement annotatedElement) {
 		if (annotatedElement == Target.class || annotatedElement == Retention.class
 			|| annotatedElement == Documented.class || annotatedElement == Inherited.class) {
 			return new ArrayList<>();
@@ -117,7 +130,7 @@ public class ReflectionJavaClassParser implements JavaClassParser<Class<?>> {
 		// class - i.e. we do need to recurse deeper into the dependencies
 		if (isApplicationClass) {
 			javaClassDeclaration.setAnnotations(parseAnnotations(classToParse));
-			javaClassDeclaration.setBaseClass(parseClass(classToParse.getSuperclass()));
+			javaClassDeclaration.setBaseClassOrInterface(parseClass(classToParse.getSuperclass()));
 			javaClassDeclaration.setImplementedInterfaces(
 				Arrays.stream(classToParse.getInterfaces()).map(this::parseClass).collect(Collectors.toList()));
 			List<JavaMethodDefinition> methods = Arrays.stream(classToParse.getDeclaredMethods())
@@ -145,7 +158,7 @@ public class ReflectionJavaClassParser implements JavaClassParser<Class<?>> {
 		boolean isFinal = Modifier.isFinal(executableToParse.getModifiers());
 		String name = isConstructor ? executableToParse.getDeclaringClass().getSimpleName()
 			: executableToParse.getName();
-		List<JavaClassDefinition> annotations = parseAnnotations(executableToParse);
+		List<JavaClassReference> annotations = parseAnnotations(executableToParse);
 		boolean isStatic = Modifier.isStatic(executableToParse.getModifiers());
 		JavaElementVisibility visibility = JavaElementVisibility.fromModifier(executableToParse.getModifiers());
 
@@ -159,8 +172,8 @@ public class ReflectionJavaClassParser implements JavaClassParser<Class<?>> {
 		List<JavaParameterDefinition> parameterDeclarations = Arrays.stream(executableToParse.getParameters())
 			.map(this::parseParameter).collect(Collectors.toList());
 
-		return new JavaMethodDefinition(isFinal, name, annotations, visibility, isStatic, isConstructor,
-			isSynchronized, isNative, isAbstract, isStrictFp, isBridge, isSynthetic, isDefault, isVarArgs, returnType,
+		return new JavaMethodDefinition(isFinal, name, annotations, visibility, isStatic, isConstructor, isSynchronized,
+			isNative, isAbstract, isStrictFp, isBridge, isSynthetic, isDefault, isVarArgs, returnType,
 			parameterDeclarations);
 	}
 
@@ -171,7 +184,7 @@ public class ReflectionJavaClassParser implements JavaClassParser<Class<?>> {
 
 		boolean isFinal = Modifier.isFinal(fieldToParse.getModifiers());
 		String name = fieldToParse.getName();
-		List<JavaClassDefinition> annotations = parseAnnotations(fieldToParse);
+		List<JavaClassReference> annotations = parseAnnotations(fieldToParse);
 		boolean isStatic = Modifier.isStatic(fieldToParse.getModifiers());
 		JavaElementVisibility visibility = JavaElementVisibility.fromModifier(fieldToParse.getModifiers());
 
@@ -192,7 +205,7 @@ public class ReflectionJavaClassParser implements JavaClassParser<Class<?>> {
 
 		boolean isFinal = Modifier.isFinal(parameterToParse.getModifiers());
 		String name = parameterToParse.getName();
-		List<JavaClassDefinition> annotations = parseAnnotations(parameterToParse);
+		List<JavaClassReference> annotations = parseAnnotations(parameterToParse);
 
 		JavaClassDefinition parameterType = parseClass(parameterToParse.getType());
 

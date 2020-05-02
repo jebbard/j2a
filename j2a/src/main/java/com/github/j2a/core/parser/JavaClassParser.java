@@ -19,4 +19,6 @@ import com.github.j2a.core.definition.JavaClassDefinition;
  */
 public interface JavaClassParser<I> {
 	JavaClassDefinition parse(I inputClass);
+
+	boolean supportsCompileRetentionAnnotations();
 }

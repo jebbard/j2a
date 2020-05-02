@@ -11,6 +11,8 @@ package com.github.j2a.core.definition;
 
 import java.util.List;
 
+import com.github.j2a.core.parser.JavaClassReference;
+
 /**
  * {@link JavaFieldDefinition} represents a field declaration in Java.
  */
@@ -18,11 +20,11 @@ public class JavaFieldDefinition extends AbstractScopedJavaElementDefinition {
 	private final boolean isVolatile;
 	private final boolean isTransient;
 	private final boolean isSynthetic;
-	private final JavaClassDefinition type;
+	private final JavaClassReference type;
 
-	public JavaFieldDefinition(boolean isFinal, String name, List<JavaClassDefinition> annotations,
+	public JavaFieldDefinition(boolean isFinal, String name, List<JavaClassReference> annotations,
 		JavaElementVisibility visibility, boolean isStatic, boolean isVolatile, boolean isTransient,
-		JavaClassDefinition type, boolean isSynthetic) {
+		JavaClassReference type, boolean isSynthetic) {
 		super(isFinal, name, visibility, isStatic);
 		this.isVolatile = isVolatile;
 		this.isTransient = isTransient;
@@ -38,7 +40,7 @@ public class JavaFieldDefinition extends AbstractScopedJavaElementDefinition {
 			other.isSynthetic());
 	}
 
-	public JavaClassDefinition getType() {
+	public JavaClassReference getType() {
 		return type;
 	}
 
