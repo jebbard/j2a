@@ -40,7 +40,7 @@ public abstract class TestClass implements TestInterface1, TestInterface2 {
 
 	@SafeVarargs
 	@SuppressWarnings("unused")
-	public static <T> List<T> myGenericMethod(String x, final int j, long... k) {
+	public static <T> List<T> myGenericMethod(String x, final int j, T z, long... k) {
 		return new ArrayList<>();
 	}
 

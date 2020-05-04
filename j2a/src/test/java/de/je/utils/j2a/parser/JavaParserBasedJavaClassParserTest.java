@@ -47,14 +47,15 @@ public class JavaParserBasedJavaClassParserTest extends AbstractJavaClassParserT
 		+ "		super();\n" + "		this.myInt = myInt;\n" + "		this.x = x;\n" + "	}\n" + "\n" + "	TestClass() {\n"
 		+ "		super();\n" + "		myInt = 0;\n" + "		x = null;\n" + "	}\n" + "\n" + "	@Override\n"
 		+ "	public synchronized void doStuff(String... y) {\n" + "		// Still does nothing\n" + "	}\n" + "\n"
-		+ "	protected native Long myStupidNativeMethod(Long[] t2, int t);\n" + "\n" + "	int getMyInt() {\n"
+		+ "	protected native Long myStupidNativeMethod(int t);\n" + "\n" + "	int getMyInt() {\n"
 		+ "		return myInt;\n" + "	}\n" + "}\n" + "";
 
 	private static final Map<String, String> EXPECTED_METHOD_PARAM_NAMES_COMPLEX = new HashMap<>();
 	static {
 		JavaParserBasedJavaClassParserTest.EXPECTED_METHOD_PARAM_NAMES_COMPLEX.put("myGenericMethod0", "x");
 		JavaParserBasedJavaClassParserTest.EXPECTED_METHOD_PARAM_NAMES_COMPLEX.put("myGenericMethod1", "j");
-		JavaParserBasedJavaClassParserTest.EXPECTED_METHOD_PARAM_NAMES_COMPLEX.put("myGenericMethod2", "k");
+		JavaParserBasedJavaClassParserTest.EXPECTED_METHOD_PARAM_NAMES_COMPLEX.put("myGenericMethod2", "z");
+		JavaParserBasedJavaClassParserTest.EXPECTED_METHOD_PARAM_NAMES_COMPLEX.put("myGenericMethod3", "k");
 		JavaParserBasedJavaClassParserTest.EXPECTED_METHOD_PARAM_NAMES_COMPLEX
 			.put(TestClass.class.getSimpleName() + "0", "myInt");
 		JavaParserBasedJavaClassParserTest.EXPECTED_METHOD_PARAM_NAMES_COMPLEX

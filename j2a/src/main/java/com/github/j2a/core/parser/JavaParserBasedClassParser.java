@@ -23,6 +23,7 @@ import com.github.j2a.core.definition.JavaFieldDefinition;
 import com.github.j2a.core.definition.JavaMethodDefinition;
 import com.github.j2a.core.definition.JavaParameterDefinition;
 import com.github.j2a.core.utils.FullyQualifiedJavaTypeReference;
+import com.github.j2a.core.utils.TypeReferenceHelper;
 import com.github.javaparser.JavaParser;
 import com.github.javaparser.ParseResult;
 import com.github.javaparser.ast.CompilationUnit;
@@ -32,10 +33,13 @@ import com.github.javaparser.ast.NodeList;
 import com.github.javaparser.ast.PackageDeclaration;
 import com.github.javaparser.ast.body.CallableDeclaration;
 import com.github.javaparser.ast.body.ClassOrInterfaceDeclaration;
+import com.github.javaparser.ast.body.EnumConstantDeclaration;
+import com.github.javaparser.ast.body.EnumDeclaration;
 import com.github.javaparser.ast.body.FieldDeclaration;
 import com.github.javaparser.ast.body.TypeDeclaration;
 import com.github.javaparser.ast.expr.AnnotationExpr;
 import com.github.javaparser.ast.nodeTypes.NodeWithTypeParameters;
+import com.github.javaparser.ast.type.ClassOrInterfaceType;
 import com.github.javaparser.ast.type.TypeParameter;
 
 /**
@@ -64,65 +68,7 @@ public class JavaParserBasedClassParser implements JavaClassParser<String> {
 
 		TypeDeclaration<?> primaryType = compilationUnit.getType(0);
 
-		JavaClassType classType = null;
-
-		if (primaryType.isEnumDeclaration()) {
-			classType = JavaClassType.ENUM;
-		} else {
-			ClassOrInterfaceDeclaration ci = (ClassOrInterfaceDeclaration) primaryType;
-
-			if (ci.isInterface()) {
-				classType = JavaClassType.INTERFACE;
-			} else {
-				classType = JavaClassType.CLASS;
-			}
-		}
-
-		JavaClassDefinition javaClassDefinition = new JavaClassDefinition(null, primaryType.hasModifier(Keyword.FINAL),
-			primaryType.getNameAsString(), JavaElementVisibility.fromAccessSpecifier(primaryType.getAccessSpecifier()),
-			primaryType.hasModifier(Keyword.STATIC), classType, false, packDecl.getNameAsString(),
-			primaryType.hasModifier(Keyword.ABSTRACT) || classType == JavaClassType.INTERFACE,
-			primaryType.hasModifier(Keyword.STRICTFP), true, false);
-
-		List<FieldDeclaration> fieldDeclarations = primaryType.getFields();
-
-		List<JavaFieldDefinition> fieldDefinitions = new ArrayList<>();
-
-		for (FieldDeclaration fieldDeclaration : fieldDeclarations) {
-			// TODO get whether field is synthetic?
-			JavaFieldDefinition fieldDef = new JavaFieldDefinition(fieldDeclaration.isFinal(),
-				fieldDeclaration.getVariable(0).getNameAsString(),
-				parseAnnotations(fieldDeclaration.getAnnotations(), typeResolver),
-				JavaElementVisibility.fromAccessSpecifier(fieldDeclaration.getAccessSpecifier()),
-				fieldDeclaration.isStatic(), fieldDeclaration.isVolatile(), fieldDeclaration.isTransient(),
-				resolveType(fieldDeclaration.getVariable(0), fieldDeclaration.getVariable(0).getTypeAsString(),
-					typeResolver),
-				false);
-
-			fieldDefinitions.add(fieldDef);
-		}
-
-		javaClassDefinition.setFields(fieldDefinitions);
-
-		javaClassDefinition.setAnnotations(parseAnnotations(primaryType.getAnnotations(), typeResolver));
-
-		List<JavaMethodDefinition> methodDefinitions = primaryType
-			.getConstructors().stream().map(constructorDeclaration -> parseCallableDeclaration(constructorDeclaration,
-				javaClassDefinition, javaClassDefinition, true, false, false, false, false, typeResolver))
-			.collect(Collectors.toList());
-
-		methodDefinitions.addAll(primaryType.getMethods().stream()
-			.map(methodDeclaration -> parseCallableDeclaration(methodDeclaration, javaClassDefinition,
-				resolveType(methodDeclaration, methodDeclaration.getTypeAsString(), typeResolver), false,
-				methodDeclaration.isSynchronized(), methodDeclaration.isNative(), false, methodDeclaration.isDefault(),
-				typeResolver))
-			.collect(Collectors.toList()));
-
-		javaClassDefinition.setMethods(methodDefinitions);
-
-		// TODO get nested classes???
-
-		return javaClassDefinition;
+		return parseTypeDeclaration(primaryType, packDecl, typeResolver, false);
 	}
 
 	/**
@@ -179,11 +125,31 @@ public class JavaParserBasedClassParser implements JavaClassParser<String> {
 
 		boolean isVarArgs = callableDeclaration.getParameters().stream().anyMatch(p -> p.isVarArgs());
 
-		List<JavaParameterDefinition> parameters = callableDeclaration.getParameters().stream()
-			.map(parameter -> new JavaParameterDefinition(parameter.isFinal(), parameter.getNameAsString(),
-				parseAnnotations(parameter.getAnnotations(), typeResolver),
-				resolveType(parameter, parameter.getTypeAsString() + (isVarArgs ? "..." : ""), typeResolver)))
-			.collect(Collectors.toList());
+		List<JavaParameterDefinition> parameters = null;
+
+		if (isVarArgs) {
+			parameters = callableDeclaration.getParameters().stream()
+				.limit(callableDeclaration.getParameters().size() - 1)
+				.map(parameter -> new JavaParameterDefinition(parameter.isFinal(), parameter.getNameAsString(),
+					parseAnnotations(parameter.getAnnotations(), typeResolver),
+					resolveType(parameter, parameter.getTypeAsString(), typeResolver)))
+				.collect(Collectors.toList());
+
+			parameters
+				.addAll(
+					callableDeclaration.getParameters().stream().skip(callableDeclaration.getParameters().size() - 1)
+						.map(parameter -> new JavaParameterDefinition(parameter.isFinal(), parameter.getNameAsString(),
+							parseAnnotations(parameter.getAnnotations(), typeResolver), resolveType(parameter,
+								parameter.getTypeAsString() + (isVarArgs ? "..." : ""), typeResolver)))
+						.collect(Collectors.toList()));
+		} else {
+			parameters = callableDeclaration.getParameters().stream()
+				.map(parameter -> new JavaParameterDefinition(parameter.isFinal(), parameter.getNameAsString(),
+					parseAnnotations(parameter.getAnnotations(), typeResolver),
+					resolveType(parameter, parameter.getTypeAsString(), typeResolver)))
+				.collect(Collectors.toList());
+
+		}
 
 		JavaElementVisibility visibility = JavaElementVisibility
 			.fromAccessSpecifier(callableDeclaration.getAccessSpecifier());
@@ -196,6 +162,164 @@ public class JavaParserBasedClassParser implements JavaClassParser<String> {
 			parseAnnotations(callableDeclaration.getAnnotations(), typeResolver), visibility,
 			callableDeclaration.isStatic(), isConstructor, isSynchronized, isNative, callableDeclaration.isAbstract(),
 			callableDeclaration.isStrictfp(), isBridge, false, isDefault, isVarArgs, returnType, parameters);
+	}
+
+	/**
+	 * @param primaryType
+	 * @param packDecl
+	 * @param typeResolver
+	 * @param isInnerClass TODO
+	 * @return
+	 */
+	private JavaClassDefinition parseTypeDeclaration(TypeDeclaration<?> primaryType, PackageDeclaration packDecl,
+		CompilationUnitTypeResolver typeResolver, boolean isInnerClass) {
+		JavaClassType classType = null;
+
+		JavaTypeReference baseClass = primaryType.isEnumDeclaration() ? new FullyQualifiedJavaTypeReference(Enum.class)
+			: new FullyQualifiedJavaTypeReference(Object.class);
+
+		if (primaryType.isEnumDeclaration()) {
+			classType = JavaClassType.ENUM;
+		} else {
+			ClassOrInterfaceDeclaration ci = (ClassOrInterfaceDeclaration) primaryType;
+
+			if (ci.isInterface()) {
+				classType = JavaClassType.INTERFACE;
+			} else {
+				classType = JavaClassType.CLASS;
+			}
+		}
+
+		if (!primaryType.isEnumDeclaration()) {
+			ClassOrInterfaceDeclaration ci = (ClassOrInterfaceDeclaration) primaryType;
+
+			if (ci.getExtendedTypes().size() == 1) {
+				ClassOrInterfaceType baseClassType = ci.getExtendedTypes(0);
+
+				baseClass = resolveType(baseClassType, baseClassType.getNameAsString(), typeResolver);
+			}
+		}
+
+		List<ClassOrInterfaceType> implementedTypes = new ArrayList<>();
+
+		if (primaryType.isEnumDeclaration()) {
+			EnumDeclaration e = (EnumDeclaration) primaryType;
+
+			implementedTypes.addAll(e.getImplementedTypes());
+		} else {
+			ClassOrInterfaceDeclaration ci = (ClassOrInterfaceDeclaration) primaryType;
+
+			implementedTypes.addAll(ci.getImplementedTypes());
+		}
+
+		List<JavaTypeReference> implementedInterfaces = new ArrayList<>();
+
+		for (ClassOrInterfaceType classOrInterfaceType : implementedTypes) {
+			implementedInterfaces
+				.add(resolveType(classOrInterfaceType, classOrInterfaceType.getNameAsString(), typeResolver));
+		}
+
+		JavaClassDefinition javaClassDefinition = new JavaClassDefinition(null,
+			primaryType.isEnumDeclaration() || primaryType.hasModifier(Keyword.FINAL), primaryType.getNameAsString(),
+			JavaElementVisibility.fromAccessSpecifier(primaryType.getAccessSpecifier()),
+			primaryType.isEnumDeclaration() || primaryType.hasModifier(Keyword.STATIC), classType, isInnerClass,
+			packDecl.getNameAsString(),
+			primaryType.hasModifier(Keyword.ABSTRACT) || classType == JavaClassType.INTERFACE,
+			primaryType.hasModifier(Keyword.STRICTFP), true, false);
+
+		javaClassDefinition.setBaseClassOrInterface(baseClass);
+
+		javaClassDefinition.setImplementedInterfaces(implementedInterfaces);
+
+		List<FieldDeclaration> fieldDeclarations = primaryType.getFields();
+
+		List<JavaFieldDefinition> fieldDefinitions = new ArrayList<>();
+
+		for (FieldDeclaration fieldDeclaration : fieldDeclarations) {
+			// TODO get whether field is synthetic?
+			JavaFieldDefinition fieldDef = new JavaFieldDefinition(fieldDeclaration.isFinal(),
+				fieldDeclaration.getVariable(0).getNameAsString(),
+				parseAnnotations(fieldDeclaration.getAnnotations(), typeResolver),
+				JavaElementVisibility.fromAccessSpecifier(fieldDeclaration.getAccessSpecifier()),
+				fieldDeclaration.isStatic(), fieldDeclaration.isVolatile(), fieldDeclaration.isTransient(),
+				resolveType(fieldDeclaration.getVariable(0), fieldDeclaration.getVariable(0).getTypeAsString(),
+					typeResolver),
+				false);
+
+			fieldDefinitions.add(fieldDef);
+		}
+
+		if (primaryType.isEnumDeclaration()) {
+			List<Node> children = primaryType.getChildNodes();
+
+			for (Node node : children) {
+				if (node instanceof EnumConstantDeclaration) {
+
+					EnumConstantDeclaration enumDecl = (EnumConstantDeclaration) node;
+
+					fieldDefinitions.add(new JavaFieldDefinition(true, enumDecl.getNameAsString(),
+						parseAnnotations(enumDecl.getAnnotations(), typeResolver), JavaElementVisibility.PUBLIC, true,
+						false, false, javaClassDefinition, false));
+				}
+			}
+
+			fieldDefinitions
+				.add(new JavaFieldDefinition(true, "ENUM$VALUES", new ArrayList<>(), JavaElementVisibility.PRIVATE,
+					true, false, false, resolveType(primaryType,
+						javaClassDefinition.getName() + TypeReferenceHelper.EMPTY_ARRAY_BRACKETS, typeResolver),
+					false));
+		}
+
+		javaClassDefinition.setFields(fieldDefinitions);
+
+		javaClassDefinition.setAnnotations(parseAnnotations(primaryType.getAnnotations(), typeResolver));
+
+		List<JavaMethodDefinition> methodDefinitions = primaryType
+			.getConstructors().stream().map(constructorDeclaration -> parseCallableDeclaration(constructorDeclaration,
+				javaClassDefinition, javaClassDefinition, true, false, false, false, false, typeResolver))
+			.collect(Collectors.toList());
+
+		// Add default constructor
+		if (primaryType.getConstructors().isEmpty() && classType != JavaClassType.INTERFACE) {
+			methodDefinitions.add(new JavaMethodDefinition(false, primaryType.getNameAsString(), new ArrayList<>(),
+				JavaElementVisibility.PUBLIC, false, true, false, false, false, false, false, false, false, false,
+				javaClassDefinition, new ArrayList<>()));
+		}
+
+		methodDefinitions.addAll(primaryType.getMethods().stream()
+			.map(methodDeclaration -> parseCallableDeclaration(methodDeclaration, javaClassDefinition,
+				resolveType(methodDeclaration, methodDeclaration.getTypeAsString(), typeResolver), false,
+				methodDeclaration.isSynchronized(), methodDeclaration.isNative(), false, methodDeclaration.isDefault(),
+				typeResolver))
+			.collect(Collectors.toList()));
+
+		if (primaryType.isEnumDeclaration()) {
+			methodDefinitions.add(new JavaMethodDefinition(false, "valueOf", new ArrayList<>(),
+				JavaElementVisibility.PUBLIC, false, false, false, false, false, false, false, false, false, false,
+				javaClassDefinition, new ArrayList<>()));
+
+			methodDefinitions
+				.add(new JavaMethodDefinition(false, "values", new ArrayList<>(), JavaElementVisibility.PUBLIC, false,
+					false, false, false, false, false, false, false, false, false, resolveType(primaryType,
+						javaClassDefinition.getName() + TypeReferenceHelper.EMPTY_ARRAY_BRACKETS, typeResolver),
+					new ArrayList<>()));
+		}
+
+		javaClassDefinition.setMethods(methodDefinitions);
+
+		List<Node> children = primaryType.getChildNodes();
+
+		List<JavaClassDefinition> nestedClasses = new ArrayList<>();
+
+		for (Node node : children) {
+			if (node instanceof TypeDeclaration) {
+				nestedClasses.add(parseTypeDeclaration((TypeDeclaration<?>) node, packDecl, typeResolver, true));
+			}
+		}
+
+		javaClassDefinition.setNestedClasses(nestedClasses);
+
+		return javaClassDefinition;
 	}
 
 	private FullyQualifiedJavaTypeReference resolveType(Node node, String type,

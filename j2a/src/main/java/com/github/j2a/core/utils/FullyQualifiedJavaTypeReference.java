@@ -23,6 +23,10 @@ public class FullyQualifiedJavaTypeReference implements JavaTypeReference {
 	private final String packageName;
 	private final List<JavaTypeReference> typeArguments = new ArrayList<>();
 
+	public FullyQualifiedJavaTypeReference(Class<?> klass) {
+		this(klass.getSimpleName(), klass.getPackageName(), new ArrayList<>());
+	}
+
 	/**
 	 * Creates a new {@link FullyQualifiedJavaTypeReference} based of a fully
 	 * qualified name of the class, without type arguments.
@@ -41,16 +45,17 @@ public class FullyQualifiedJavaTypeReference implements JavaTypeReference {
 	 * @param typeArguments
 	 */
 	public FullyQualifiedJavaTypeReference(String fullyQualifiedClassName, List<JavaTypeReference> typeArguments) {
-		if (!IdentifierHelper.isValidJavaTypeReference(fullyQualifiedClassName)) {
+		if (!TypeReferenceHelper.isValidJavaTypeReference(fullyQualifiedClassName)) {
 			throw new IllegalArgumentException("Not a valid Java fully qualified class name");
 		}
 
-		name = IdentifierHelper.getClassNameFromFullyQualified(fullyQualifiedClassName);
+		name = TypeReferenceHelper
+			.getRawType(TypeReferenceHelper.getClassNameFromFullyQualified(fullyQualifiedClassName));
 
-		if (IdentifierHelper.isPrimitive(fullyQualifiedClassName)) {
-			packageName = IdentifierHelper.JAVA_LANG;
+		if (TypeReferenceHelper.isPrimitive(fullyQualifiedClassName)) {
+			packageName = TypeReferenceHelper.JAVA_LANG;
 		} else {
-			packageName = IdentifierHelper.getPackageNameFromFullyQualified(fullyQualifiedClassName);
+			packageName = TypeReferenceHelper.getPackageNameFromFullyQualified(fullyQualifiedClassName);
 		}
 
 		typeArguments.addAll(typeArguments);
@@ -76,7 +81,7 @@ public class FullyQualifiedJavaTypeReference implements JavaTypeReference {
 	 */
 	public FullyQualifiedJavaTypeReference(String className, String packageName,
 		List<JavaTypeReference> typeArguments) {
-		name = className;
+		name = TypeReferenceHelper.getRawType(className);
 		this.packageName = packageName;
 		this.typeArguments.addAll(typeArguments);
 	}

@@ -97,7 +97,7 @@ public abstract class AbstractJavaClassParserTest<I> {
 		Assertions.assertEquals(0, secondNestedClassDeclaration.getImplementedInterfaces().size());
 		Assertions.assertEquals(false, secondNestedClassDeclaration.isAbstract());
 		Assertions.assertEquals(true, secondNestedClassDeclaration.isInnerClass());
-		Assertions.assertEquals(false, secondNestedClassDeclaration.isStrictFp());
+		Assertions.assertEquals(true, secondNestedClassDeclaration.isStrictFp());
 		Assertions.assertEquals(true, secondNestedClassDeclaration.isApplicationClass());
 		Assertions.assertEquals(0, secondNestedClassDeclaration.getNestedClasses().size());
 		Assertions.assertEquals(2, secondNestedClassDeclaration.getFields().size());
@@ -107,7 +107,7 @@ public abstract class AbstractJavaClassParserTest<I> {
 			JavaElementVisibility.PACKAGE_PRIVATE, void.class, false, false);
 		Assertions.assertEquals(false, sncdFirstMethod.isAbstract());
 		Assertions.assertEquals(false, sncdFirstMethod.isBridge());
-		Assertions.assertEquals(true, sncdFirstMethod.isStrictFp());
+		Assertions.assertEquals(false, sncdFirstMethod.isStrictFp());
 		Assertions.assertEquals(false, sncdFirstMethod.isConstructor());
 		Assertions.assertEquals(false, sncdFirstMethod.isDefault());
 		Assertions.assertEquals(false, sncdFirstMethod.isNative());
@@ -145,8 +145,8 @@ public abstract class AbstractJavaClassParserTest<I> {
 		Assertions.assertEquals(false, fourthField.isTransient());
 		Assertions.assertEquals(true, fourthField.isVolatile());
 
-		JavaMethodDefinition firstMethod = assertHasMethod(classDeclaration, AbstractJavaClassParserTest.METH3, 3,
-			JavaElementVisibility.PUBLIC, List.class, false, true, SafeVarargs.class);
+		JavaMethodDefinition firstMethod = assertHasMethod(classDeclaration, AbstractJavaClassParserTest.METH3, 4,
+			JavaElementVisibility.PUBLIC, List.class, false, true, SafeVarargs.class, SuppressWarnings.class);
 		Assertions.assertEquals(false, firstMethod.isAbstract());
 		Assertions.assertEquals(false, firstMethod.isBridge());
 		Assertions.assertEquals(false, firstMethod.isStrictFp());
@@ -158,8 +158,10 @@ public abstract class AbstractJavaClassParserTest<I> {
 		assertHasMethodParam(firstMethod, 0, getExpectedMethodParamName(AbstractJavaClassParserTest.METH3, 0, false),
 			String.class, false);
 		assertHasMethodParam(firstMethod, 1, getExpectedMethodParamName(AbstractJavaClassParserTest.METH3, 1, false),
-			int.class, false);
+			int.class, true);
 		assertHasMethodParam(firstMethod, 2, getExpectedMethodParamName(AbstractJavaClassParserTest.METH3, 2, false),
+			"de.je.utils.j2a.parser.T", false);
+		assertHasMethodParam(firstMethod, 3, getExpectedMethodParamName(AbstractJavaClassParserTest.METH3, 3, false),
 			long[].class, false);
 
 		JavaMethodDefinition secondMethod = assertHasMethod(classDeclaration, AbstractJavaClassParserTest.CONSTR1, 2,
@@ -191,7 +193,7 @@ public abstract class AbstractJavaClassParserTest<I> {
 		Assertions.assertEquals(false, thirdMethod.isVarArgs());
 
 		JavaMethodDefinition fourthMethod = assertHasMethod(classDeclaration, AbstractJavaClassParserTest.METH1, 1,
-			JavaElementVisibility.PUBLIC, void.class, false, false);
+			JavaElementVisibility.PUBLIC, void.class, false, false, Override.class);
 		Assertions.assertEquals(false, fourthMethod.isAbstract());
 		Assertions.assertEquals(false, fourthMethod.isBridge());
 		Assertions.assertEquals(false, fourthMethod.isStrictFp());
@@ -237,7 +239,7 @@ public abstract class AbstractJavaClassParserTest<I> {
 		JavaClassDefinition classDeclaration = javaClassParser.parse(getSimpleInputClass());
 
 		assertClassDeclarationIsValid(classDeclaration, JavaClassType.INTERFACE, TestInterface1.class,
-			JavaElementVisibility.PUBLIC, null, false, false);
+			JavaElementVisibility.PUBLIC, Object.class, false, false);
 		Assertions.assertEquals(0, classDeclaration.getImplementedInterfaces().size());
 		Assertions.assertEquals(true, classDeclaration.isAbstract());
 		Assertions.assertEquals(false, classDeclaration.isInnerClass());
@@ -270,11 +272,7 @@ public abstract class AbstractJavaClassParserTest<I> {
 		assertIsType(expectedType, classDeclaration);
 		Assertions.assertEquals(classType, classDeclaration.getClassType());
 		Assertions.assertEquals(expectedVisibility, classDeclaration.getVisibility());
-		if (expectedBaseClass == null) {
-			Assertions.assertNull(classDeclaration.getBaseClassOrInterface());
-		} else {
-			assertIsType(expectedBaseClass, classDeclaration.getBaseClassOrInterface());
-		}
+		assertIsType(expectedBaseClass, classDeclaration.getBaseClassOrInterface());
 
 		assertHasAnnotations(classDeclaration, expectedClassAnnotations);
 		Assertions.assertEquals(expectedFinal, classDeclaration.isFinal());
@@ -339,6 +337,16 @@ public abstract class AbstractJavaClassParserTest<I> {
 
 		Assertions.assertEquals(expectedParamName, fifFirstParam.getName());
 		assertIsType(expectedParamType, fifFirstParam.getType());
+		Assertions.assertEquals(expectedFinal, fifFirstParam.isFinal());
+		assertHasAnnotations(fifFirstParam, expectedParamAnnotations);
+	}
+
+	private void assertHasMethodParam(JavaMethodDefinition fifthMethod, int paramIndex, String expectedParamName,
+		String expectedParamType, boolean expectedFinal, Class<?>... expectedParamAnnotations) {
+		JavaParameterDefinition fifFirstParam = fifthMethod.getParameters().get(paramIndex);
+
+		Assertions.assertEquals(expectedParamName, fifFirstParam.getName());
+		Assertions.assertEquals(expectedParamType, fifFirstParam.getType().getFullyQualifiedName());
 		Assertions.assertEquals(expectedFinal, fifFirstParam.isFinal());
 		assertHasAnnotations(fifFirstParam, expectedParamAnnotations);
 	}
