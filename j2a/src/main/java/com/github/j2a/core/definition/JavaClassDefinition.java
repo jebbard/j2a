@@ -12,13 +12,13 @@ package com.github.j2a.core.definition;
 import java.util.ArrayList;
 import java.util.List;
 
-import com.github.j2a.core.parser.JavaClassReference;
+import com.github.j2a.core.parser.JavaTypeReference;
 
 /**
  * {@link JavaClassDefinition} represents a Java class, interface, enum or
  * annotation declaration.
  */
-public class JavaClassDefinition extends AbstractScopedJavaElementDefinition implements JavaClassReference {
+public class JavaClassDefinition extends AbstractScopedJavaElementDefinition implements JavaTypeReference {
 	private final Class<?> sourceClass;
 	private final JavaClassType classType;
 	private final boolean isInnerClass;
@@ -28,8 +28,10 @@ public class JavaClassDefinition extends AbstractScopedJavaElementDefinition imp
 	private final boolean isApplicationClass;
 	private final boolean isPrimitive;
 
-	private JavaClassReference baseClassOrInterface;
-	private List<JavaClassReference> implementedInterfaces = new ArrayList<>();
+	private JavaTypeReference baseClassOrInterface;
+
+	private List<JavaTypeReference> implementedInterfaces = new ArrayList<>();
+	private List<JavaTypeReference> typeArguments = new ArrayList<>();
 	private List<JavaMethodDefinition> methods = new ArrayList<>();
 	private List<JavaFieldDefinition> fields = new ArrayList<>();
 	private List<JavaClassDefinition> nestedClasses = new ArrayList<>();
@@ -48,7 +50,7 @@ public class JavaClassDefinition extends AbstractScopedJavaElementDefinition imp
 		this.isPrimitive = isPrimitive;
 	}
 
-	public JavaClassReference getBaseClassOrInterface() {
+	public JavaTypeReference getBaseClassOrInterface() {
 		return baseClassOrInterface;
 	}
 
@@ -65,7 +67,7 @@ public class JavaClassDefinition extends AbstractScopedJavaElementDefinition imp
 		return packageName + "." + getName();
 	}
 
-	public List<JavaClassReference> getImplementedInterfaces() {
+	public List<JavaTypeReference> getImplementedInterfaces() {
 		return implementedInterfaces;
 	}
 
@@ -84,6 +86,14 @@ public class JavaClassDefinition extends AbstractScopedJavaElementDefinition imp
 
 	public Class<?> getSourceClass() {
 		return sourceClass;
+	}
+
+	/**
+	 * @see com.github.j2a.core.parser.JavaTypeReference#getTypeArguments()
+	 */
+	@Override
+	public List<JavaTypeReference> getTypeArguments() {
+		return typeArguments;
 	}
 
 	public boolean isAbstract() {
@@ -106,7 +116,7 @@ public class JavaClassDefinition extends AbstractScopedJavaElementDefinition imp
 		return isStrictFp;
 	}
 
-	public void setBaseClassOrInterface(JavaClassReference baseClass) {
+	public void setBaseClassOrInterface(JavaTypeReference baseClass) {
 		baseClassOrInterface = baseClass;
 	}
 
@@ -114,7 +124,7 @@ public class JavaClassDefinition extends AbstractScopedJavaElementDefinition imp
 		this.fields = fields;
 	}
 
-	public void setImplementedInterfaces(List<JavaClassReference> implementedInterfaces) {
+	public void setImplementedInterfaces(List<JavaTypeReference> implementedInterfaces) {
 		this.implementedInterfaces = implementedInterfaces;
 	}
 

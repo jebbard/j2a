@@ -1,6 +1,6 @@
 /**
  *
- * {@link JavaClassReference}.java
+ * {@link JavaTypeReference}.java
  *
  * @author Jens Ebert
  *
@@ -9,14 +9,18 @@
  */
 package com.github.j2a.core.parser;
 
+import java.util.List;
+
 /**
- * {@link JavaClassReference}
+ * {@link JavaTypeReference}
  *
  */
-public interface JavaClassReference {
+public interface JavaTypeReference {
 	String getFullyQualifiedName();
 
 	String getName();
 
 	String getPackageName();
+
+	List<JavaTypeReference> getTypeArguments();
 }

@@ -17,7 +17,7 @@ import com.github.j2a.core.definition.JavaClassDefinition;
 import com.github.j2a.core.generation.Generator;
 import com.github.j2a.core.generation.GeneratorResult;
 import com.github.j2a.core.generation.J2A;
-import com.github.j2a.core.utils.FullyQualifiedJavaClass;
+import com.github.j2a.core.utils.FullyQualifiedJavaTypeReference;
 import com.github.j2a.core.utils.JavaClassBuilder;
 
 /**
@@ -44,14 +44,14 @@ public class SpringRepositoryFromEntityGenerator implements Generator {
 	 * @see com.github.j2a.core.generation.Generator#generateResult(com.github.j2a.core.definition.JavaClassDefinition)
 	 */
 	public GeneratorResult generateResult(JavaClassDefinition classDefinition) {
-		JavaClassBuilder builder = JavaClassBuilder.createInterface(new FullyQualifiedJavaClass(
+		JavaClassBuilder builder = JavaClassBuilder.createInterface(new FullyQualifiedJavaTypeReference(
 			classDefinition.getName() + "Repository", "org.mycollection.games.server.games.impl.data"));
 
 		builder.withClassJavadoc("A repository for " + classDefinition.getName() + " entities.")
-			.extending(new FullyQualifiedJavaClass("org.springframework.data.jpa.repository.JpaRepository"),
-				new FullyQualifiedJavaClass(classDefinition.getName(), classDefinition.getPackageName()),
-				new FullyQualifiedJavaClass("java.lang.Long"))
-			.withAnnotation(new FullyQualifiedJavaClass("org.springframework.stereotype.Repository"))
+			.extending(new FullyQualifiedJavaTypeReference("org.springframework.data.jpa.repository.JpaRepository"),
+				new FullyQualifiedJavaTypeReference(classDefinition.getName(), classDefinition.getPackageName()),
+				new FullyQualifiedJavaTypeReference("java.lang.Long"))
+			.withAnnotation(new FullyQualifiedJavaTypeReference("org.springframework.stereotype.Repository"))
 			.withBodyComment("Intentionally empty");
 
 		System.out.println(builder.build());

@@ -9,40 +9,130 @@
  */
 package com.github.j2a.core.parser;
 
-import com.github.j2a.core.utils.FullyQualifiedJavaClass;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
+import java.util.Set;
+import java.util.stream.Collectors;
+
+import com.github.j2a.core.utils.FullyQualifiedJavaTypeReference;
 import com.github.j2a.core.utils.IdentifierHelper;
-import com.github.javaparser.ast.CompilationUnit;
-import com.github.javaparser.ast.ImportDeclaration;
-import com.github.javaparser.ast.NodeList;
-import com.github.javaparser.ast.body.TypeDeclaration;
-import com.github.javaparser.ast.type.Type;
 
 /**
  * {@link CompilationUnitTypeResolver} resolves Java Parser types into
- * {@link FullyQualifiedJavaClass}s.
+ * {@link FullyQualifiedJavaTypeReference}s.
  */
 public class CompilationUnitTypeResolver {
-	private final NodeList<ImportDeclaration> importDeclarations;
-	private final NodeList<TypeDeclaration<?>> compilationUnitTypes;
+	private static final String VARARGS_ELLIPSIS = "...";
+	private final Set<String> importDeclarations;
+	private final Set<String> unqualifiedRawCompilationUnitTypes;
 
-	public CompilationUnitTypeResolver(CompilationUnit compilationUnit) {
-		importDeclarations = compilationUnit.getImports();
-		compilationUnitTypes = compilationUnit.getTypes();
+	private final String compilationUnitPackage;
+
+	/**
+	 * Creates a new {@link CompilationUnitTypeResolver}.
+	 *
+	 * @param importDeclarations
+	 * @param compilationUnitTypes
+	 * @param compilationUnitPackage
+	 */
+	public CompilationUnitTypeResolver(Set<String> importDeclarations, Set<String> compilationUnitTypes,
+		String compilationUnitPackage) {
+		this.importDeclarations = importDeclarations;
+		unqualifiedRawCompilationUnitTypes = compilationUnitTypes.stream()
+			.map(cut -> IdentifierHelper.getClassNameFromFullyQualified(getRawType(cut))).collect(Collectors.toSet());
+		this.compilationUnitPackage = compilationUnitPackage;
 	}
 
-	public FullyQualifiedJavaClass resolveType(Type type, boolean isVarArgsParam) {
-		String typeAsString = type.asString();
+	public FullyQualifiedJavaTypeReference resolveType(String type, Set<String> typeParametersInScope) {
+		String typeExpression = type;
 
-		if (IdentifierHelper.isValidJavaFullyQualifiedIdentifier(typeAsString)) {
-			return new FullyQualifiedJavaClass(typeAsString);
+		if (typeExpression.endsWith(CompilationUnitTypeResolver.VARARGS_ELLIPSIS)) {
+			typeExpression = typeExpression.replace(CompilationUnitTypeResolver.VARARGS_ELLIPSIS,
+				IdentifierHelper.EMPTY_ARRAY_BRACKETS);
 		}
 
-		// TODO:
-		/*
-		 * 2) Is in import list 3) Is Type in CU 4) Is type param in element's context?
-		 * 5) Is in java.lang?
-		 */
+		List<JavaTypeReference> typeArgumentRefs = getTypeArguments(typeExpression).stream()
+			.map(ta -> resolveType(ta, typeParametersInScope)).collect(Collectors.toList());
 
-		return new FullyQualifiedJavaClass(isVarArgsParam ? typeAsString + "[]" : typeAsString);
+		if (IdentifierHelper.isTypeReferenceFullyQualified(typeExpression)) {
+			return new FullyQualifiedJavaTypeReference(typeExpression, typeArgumentRefs);
+		}
+
+		String typeFromImportList = getFromImportList(typeExpression);
+
+		if (typeFromImportList != null) {
+			return new FullyQualifiedJavaTypeReference(typeFromImportList, typeArgumentRefs);
+		}
+
+		if (isTypeDeclaredInCompilationUnit(typeExpression)) {
+			return new FullyQualifiedJavaTypeReference(typeExpression, compilationUnitPackage, typeArgumentRefs);
+		}
+
+		if (typeParametersInScope.contains(getElementType(typeExpression))) {
+			return new FullyQualifiedJavaTypeReference(typeExpression, compilationUnitPackage, typeArgumentRefs);
+		}
+
+		if (IdentifierHelper.isJavaLangClass(typeExpression)) {
+			return new FullyQualifiedJavaTypeReference(typeExpression, IdentifierHelper.JAVA_LANG, typeArgumentRefs);
+		}
+
+		return new FullyQualifiedJavaTypeReference(typeExpression, compilationUnitPackage, typeArgumentRefs);
+
+	}
+
+	private String getArrayType(String typeReference) {
+		if (typeReference.endsWith(IdentifierHelper.EMPTY_ARRAY_BRACKETS)) {
+			return typeReference;
+		}
+
+		return typeReference + IdentifierHelper.EMPTY_ARRAY_BRACKETS;
+	}
+
+	private String getElementType(String typeReference) {
+		if (typeReference.endsWith(IdentifierHelper.EMPTY_ARRAY_BRACKETS)) {
+			return typeReference.substring(0, typeReference.indexOf(IdentifierHelper.ARRAY_START_BRACKET));
+		}
+
+		return typeReference;
+	}
+
+	private String getFromImportList(String typeName) {
+		for (String importDeclaration : importDeclarations) {
+			if (importDeclaration.endsWith(IdentifierHelper.PACKAGE_SEGMENT_SEPARATOR + typeName)) {
+				return importDeclaration;
+			}
+		}
+
+		return null;
+	}
+
+	private String getRawType(String typeReference) {
+		if (typeReference.contains(Character.toString(IdentifierHelper.TYPE_ARGUMENT_START_BRACKET))) {
+			return typeReference.substring(0, typeReference.indexOf(IdentifierHelper.TYPE_ARGUMENT_START_BRACKET));
+		}
+
+		return typeReference;
+	}
+
+	private List<String> getTypeArguments(String typeReference) {
+		if (typeReference.contains(Character.toString(IdentifierHelper.TYPE_ARGUMENT_START_BRACKET))) {
+			String typeArgs = typeReference.substring(
+				typeReference.indexOf(IdentifierHelper.TYPE_ARGUMENT_START_BRACKET) + 1,
+				typeReference.indexOf(IdentifierHelper.TYPE_ARGUMENT_END_BRACKET));
+			return Arrays.stream(typeArgs.split(",")).map(ta -> ta.trim()).collect(Collectors.toList());
+		}
+
+		return new ArrayList<>();
+	}
+
+	private boolean isTypeDeclaredInCompilationUnit(String type) {
+		for (String typeDeclaration : unqualifiedRawCompilationUnitTypes) {
+			if (typeDeclaration.equals(getRawType(getElementType(type)))) {
+				return true;
+			}
+		}
+
+		return false;
 	}
 }

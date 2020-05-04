@@ -31,7 +31,7 @@ import com.github.j2a.core.definition.JavaFieldDefinition;
 import com.github.j2a.core.definition.JavaMethodDefinition;
 import com.github.j2a.core.definition.JavaParameterDefinition;
 import com.github.j2a.core.parser.JavaClassParser;
-import com.github.j2a.core.parser.JavaClassReference;
+import com.github.j2a.core.parser.JavaTypeReference;
 
 import de.je.utils.j2a.parser.TestClass.InnerTestClass;
 import de.je.utils.j2a.parser.TestClass.TestEnum;
@@ -355,9 +355,9 @@ public abstract class AbstractJavaClassParserTest<I> {
 		return firstElementWithNameAndParamCount.get();
 	}
 
-	private JavaClassReference assertHasReferencedClassWithType(Class<?> type,
-		List<? extends JavaClassReference> classDeclarations) {
-		Optional<? extends JavaClassReference> firstElementWithName = classDeclarations.stream()
+	private JavaTypeReference assertHasReferencedClassWithType(Class<?> type,
+		List<? extends JavaTypeReference> classDeclarations) {
+		Optional<? extends JavaTypeReference> firstElementWithName = classDeclarations.stream()
 			.filter(c -> isType(c, type)).findFirst();
 
 		Assertions.assertTrue(firstElementWithName.isPresent());
@@ -365,13 +365,13 @@ public abstract class AbstractJavaClassParserTest<I> {
 		return firstElementWithName.get();
 	}
 
-	private void assertIsType(Class<?> expectedType, JavaClassReference classDeclaration) {
+	private void assertIsType(Class<?> expectedType, JavaTypeReference classDeclaration) {
 		Assertions.assertNotNull(classDeclaration);
 		Assertions.assertEquals(expectedType.getSimpleName(), classDeclaration.getName());
 		Assertions.assertEquals(expectedType.getPackageName(), classDeclaration.getPackageName());
 	}
 
-	private boolean isType(JavaClassReference classDeclaration, Class<?> expectedType) {
+	private boolean isType(JavaTypeReference classDeclaration, Class<?> expectedType) {
 		return expectedType.getSimpleName().equals(classDeclaration.getName())
 			&& expectedType.getPackageName().equals(classDeclaration.getPackageName());
 	}

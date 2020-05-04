@@ -41,13 +41,13 @@ public class JavaParserBasedJavaClassParserTest extends AbstractJavaClassParserT
 		+ "		void myInnerMethod() {\n" + "			// do nothing\n" + "		}\n" + "	}\n" + "\n"
 		+ "	static Boolean TEST;\n" + "\n" + "	public static final String TEST_2 = \"TEST_2\";\n" + "\n"
 		+ "	@SafeVarargs\n" + "	@SuppressWarnings(\"unused\")\n"
-		+ "	public static <T> List<T> myGenericMethod(String x, final int j, long... k) {\n"
+		+ "	public static <T> List<T> myGenericMethod(String x, final int j, T z, long... k) {\n"
 		+ "		return new ArrayList<>();\n" + "	}\n" + "\n" + "	private final transient int myInt;\n" + "\n"
 		+ "	protected volatile AtomicLong x;\n" + "\n" + "	public TestClass(int myInt, AtomicLong x) {\n"
 		+ "		super();\n" + "		this.myInt = myInt;\n" + "		this.x = x;\n" + "	}\n" + "\n" + "	TestClass() {\n"
 		+ "		super();\n" + "		myInt = 0;\n" + "		x = null;\n" + "	}\n" + "\n" + "	@Override\n"
 		+ "	public synchronized void doStuff(String... y) {\n" + "		// Still does nothing\n" + "	}\n" + "\n"
-		+ "	protected native Long myStupidNativeMethod(int t);\n" + "\n" + "	int getMyInt() {\n"
+		+ "	protected native Long myStupidNativeMethod(Long[] t2, int t);\n" + "\n" + "	int getMyInt() {\n"
 		+ "		return myInt;\n" + "	}\n" + "}\n" + "";
 
 	private static final Map<String, String> EXPECTED_METHOD_PARAM_NAMES_COMPLEX = new HashMap<>();

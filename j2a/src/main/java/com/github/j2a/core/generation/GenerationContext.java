@@ -9,7 +9,7 @@
  */
 package com.github.j2a.core.generation;
 
-import com.github.j2a.core.parser.JavaClassReference;
+import com.github.j2a.core.parser.JavaTypeReference;
 
 /**
  * {@link GenerationContext}
@@ -28,7 +28,7 @@ public class GenerationContext {
 		this.applicationPackage = applicationPackage;
 	}
 
-	public boolean isApplicationClass(JavaClassReference reference) {
+	public boolean isApplicationClass(JavaTypeReference reference) {
 		return reference.getPackageName().startsWith(applicationPackage);
 	}
 }

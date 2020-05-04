@@ -39,13 +39,13 @@ import com.github.javaparser.ast.type.VoidType;
  *
  */
 public class JavaClassBuilder {
-	public static JavaClassBuilder createClass(FullyQualifiedJavaClass fullyQualifiedJavaClass) {
+	public static JavaClassBuilder createClass(FullyQualifiedJavaTypeReference fullyQualifiedJavaClass) {
 		CompilationUnit unit = new CompilationUnit(fullyQualifiedJavaClass.getPackageName());
 
 		return new JavaClassBuilder(unit, unit.addClass(fullyQualifiedJavaClass.getName(), Keyword.PUBLIC));
 	}
 
-	public static JavaClassBuilder createInterface(FullyQualifiedJavaClass fullyQualifiedJavaClass) {
+	public static JavaClassBuilder createInterface(FullyQualifiedJavaTypeReference fullyQualifiedJavaClass) {
 		CompilationUnit unit = new CompilationUnit(fullyQualifiedJavaClass.getPackageName());
 
 		return new JavaClassBuilder(unit, unit.addInterface(fullyQualifiedJavaClass.getName(), Keyword.PUBLIC));
@@ -80,15 +80,15 @@ public class JavaClassBuilder {
 		return unit.toString();
 	}
 
-	public JavaClassBuilder extending(FullyQualifiedJavaClass extendedClass,
-		FullyQualifiedJavaClass... extendedClassTypeArgs) {
+	public JavaClassBuilder extending(FullyQualifiedJavaTypeReference extendedClass,
+		FullyQualifiedJavaTypeReference... extendedClassTypeArgs) {
 		jpDeclaration.addExtendedType(extendedClass.getName());
 		importStatements.add(extendedClass.getFullyQualifiedName());
 
 		if (extendedClassTypeArgs.length > 0) {
 			List<Type> typeArguments = new ArrayList<>();
 
-			for (FullyQualifiedJavaClass extendedClassTypeArg : extendedClassTypeArgs) {
+			for (FullyQualifiedJavaTypeReference extendedClassTypeArg : extendedClassTypeArgs) {
 				typeArguments
 					.add(new JavaParser().parseClassOrInterfaceType(extendedClassTypeArg.getName()).getResult().get());
 				importStatements.add(extendedClassTypeArg.getFullyQualifiedName());
@@ -99,7 +99,7 @@ public class JavaClassBuilder {
 		return this;
 	}
 
-	public JavaClassBuilder withAnnotation(FullyQualifiedJavaClass annotation) {
+	public JavaClassBuilder withAnnotation(FullyQualifiedJavaTypeReference annotation) {
 		jpDeclaration.addAnnotation(annotation.getName());
 		importStatements.add(annotation.getFullyQualifiedName());
 

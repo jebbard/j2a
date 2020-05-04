@@ -17,7 +17,7 @@ import com.github.j2a.core.definition.JavaClassDefinition;
 import com.github.j2a.core.generation.Generator;
 import com.github.j2a.core.generation.GeneratorResult;
 import com.github.j2a.core.generation.J2A;
-import com.github.j2a.core.utils.FullyQualifiedJavaClass;
+import com.github.j2a.core.utils.FullyQualifiedJavaTypeReference;
 import com.github.j2a.core.utils.JavaClassBuilder;
 
 /**
@@ -46,7 +46,7 @@ public class MapStructMapperFromEntityGenerator implements Generator {
 	 */
 	public GeneratorResult generateResult(JavaClassDefinition classDefinition) {
 		String entitySimpleName = classDefinition.getName();
-		JavaClassBuilder builder = JavaClassBuilder.createInterface(new FullyQualifiedJavaClass(
+		JavaClassBuilder builder = JavaClassBuilder.createInterface(new FullyQualifiedJavaTypeReference(
 			entitySimpleName + "Mapper", "org.mycollection.games.server.games.impl.facade"));
 
 		// TODO derive TO package from entity package
@@ -55,10 +55,10 @@ public class MapStructMapperFromEntityGenerator implements Generator {
 		builder
 			.withClassJavadoc(
 				"A MapStruct mapper for mapping {@link " + entitySimpleName + "} entities to {@link " + toName + "}s.")
-			.extending(new FullyQualifiedJavaClass("org.mycollection.games.server.utils.MGCMapper"),
-				new FullyQualifiedJavaClass(toName, classDefinition.getPackageName()),
-				new FullyQualifiedJavaClass(entitySimpleName, classDefinition.getPackageName()))
-			.withAnnotation(new FullyQualifiedJavaClass("org.mapstruct.Mapper")).withBodyComment("Intentionally empty");
+			.extending(new FullyQualifiedJavaTypeReference("org.mycollection.games.server.utils.MGCMapper"),
+				new FullyQualifiedJavaTypeReference(toName, classDefinition.getPackageName()),
+				new FullyQualifiedJavaTypeReference(entitySimpleName, classDefinition.getPackageName()))
+			.withAnnotation(new FullyQualifiedJavaTypeReference("org.mapstruct.Mapper")).withBodyComment("Intentionally empty");
 
 		System.out.println(builder.build());
 

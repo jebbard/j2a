@@ -17,7 +17,7 @@ import com.github.j2a.core.definition.JavaClassDefinition;
 import com.github.j2a.core.generation.Generator;
 import com.github.j2a.core.generation.GeneratorResult;
 import com.github.j2a.core.generation.J2A;
-import com.github.j2a.core.utils.FullyQualifiedJavaClass;
+import com.github.j2a.core.utils.FullyQualifiedJavaTypeReference;
 import com.github.j2a.core.utils.JavaClassBuilder;
 
 /**
@@ -45,7 +45,7 @@ public class ServiceInterfaceFromEntityGenerator implements Generator {
 	 */
 	public GeneratorResult generateResult(JavaClassDefinition classDefinition) {
 		String entitySimpleName = classDefinition.getName();
-		JavaClassBuilder builder = JavaClassBuilder.createInterface(new FullyQualifiedJavaClass(
+		JavaClassBuilder builder = JavaClassBuilder.createInterface(new FullyQualifiedJavaTypeReference(
 			entitySimpleName + "Service", "org.mycollection.games.server.games.api"));
 
 		String toSimpleName = entitySimpleName + "TO";

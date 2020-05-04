@@ -19,8 +19,8 @@ import com.github.j2a.core.generation.GenerationContext;
 import com.github.j2a.core.generation.Generator;
 import com.github.j2a.core.generation.GeneratorResult;
 import com.github.j2a.core.generation.J2A;
-import com.github.j2a.core.parser.JavaClassReference;
-import com.github.j2a.core.utils.FullyQualifiedJavaClass;
+import com.github.j2a.core.parser.JavaTypeReference;
+import com.github.j2a.core.utils.FullyQualifiedJavaTypeReference;
 import com.github.j2a.core.utils.JavaClassBuilder;
 
 /**
@@ -49,16 +49,16 @@ public class TOFromEntityGenerator implements Generator {
 	 */
 	public GeneratorResult generateResult(JavaClassDefinition classDefinition, GenerationContext context) {
 		JavaClassBuilder builder = JavaClassBuilder.createClass(
-			new FullyQualifiedJavaClass(classDefinition.getName() + "TO", "org.mycollection.games.server.games.api"));
+			new FullyQualifiedJavaTypeReference(classDefinition.getName() + "TO", "org.mycollection.games.server.games.api"));
 
 		builder.withClassJavadoc("A transport object for " + classDefinition.getName() + " entities.")
-			.extending(new FullyQualifiedJavaClass("org.mycollection.games.server.utils.AbstractTO"));
+			.extending(new FullyQualifiedJavaTypeReference("org.mycollection.games.server.utils.AbstractTO"));
 
 		for (JavaFieldDefinition fieldDefinition : classDefinition.getFields()) {
 			if (!fieldDefinition.isFinal() && !fieldDefinition.isStatic() && !fieldDefinition.isTransient()
 				&& !fieldDefinition.hasAnnotationByRegex(".*Transient")) {
 				if (fieldDefinition.hasAnnotationByRegex(".*ManyToOne|.*OneToMany|.*ManyToMany|.*OneToOne")) {
-					JavaClassReference fieldType = fieldDefinition.getType();
+					JavaTypeReference fieldType = fieldDefinition.getType();
 
 					if (context.isApplicationClass(fieldType)) {
 						JavaFieldDefinition adaptedFieldDefinition = new JavaFieldDefinition(fieldDefinition,

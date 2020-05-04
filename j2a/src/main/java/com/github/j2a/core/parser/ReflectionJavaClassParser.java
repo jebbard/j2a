@@ -85,7 +85,7 @@ public class ReflectionJavaClassParser implements JavaClassParser<Class<?>> {
 		return false;
 	}
 
-	private List<JavaClassReference> parseAnnotations(AnnotatedElement annotatedElement) {
+	private List<JavaTypeReference> parseAnnotations(AnnotatedElement annotatedElement) {
 		if (annotatedElement == Target.class || annotatedElement == Retention.class
 			|| annotatedElement == Documented.class || annotatedElement == Inherited.class) {
 			return new ArrayList<>();
@@ -158,7 +158,7 @@ public class ReflectionJavaClassParser implements JavaClassParser<Class<?>> {
 		boolean isFinal = Modifier.isFinal(executableToParse.getModifiers());
 		String name = isConstructor ? executableToParse.getDeclaringClass().getSimpleName()
 			: executableToParse.getName();
-		List<JavaClassReference> annotations = parseAnnotations(executableToParse);
+		List<JavaTypeReference> annotations = parseAnnotations(executableToParse);
 		boolean isStatic = Modifier.isStatic(executableToParse.getModifiers());
 		JavaElementVisibility visibility = JavaElementVisibility.fromModifier(executableToParse.getModifiers());
 
@@ -184,7 +184,7 @@ public class ReflectionJavaClassParser implements JavaClassParser<Class<?>> {
 
 		boolean isFinal = Modifier.isFinal(fieldToParse.getModifiers());
 		String name = fieldToParse.getName();
-		List<JavaClassReference> annotations = parseAnnotations(fieldToParse);
+		List<JavaTypeReference> annotations = parseAnnotations(fieldToParse);
 		boolean isStatic = Modifier.isStatic(fieldToParse.getModifiers());
 		JavaElementVisibility visibility = JavaElementVisibility.fromModifier(fieldToParse.getModifiers());
 
@@ -205,7 +205,7 @@ public class ReflectionJavaClassParser implements JavaClassParser<Class<?>> {
 
 		boolean isFinal = Modifier.isFinal(parameterToParse.getModifiers());
 		String name = parameterToParse.getName();
-		List<JavaClassReference> annotations = parseAnnotations(parameterToParse);
+		List<JavaTypeReference> annotations = parseAnnotations(parameterToParse);
 
 		JavaClassDefinition parameterType = parseClass(parameterToParse.getType());
 
