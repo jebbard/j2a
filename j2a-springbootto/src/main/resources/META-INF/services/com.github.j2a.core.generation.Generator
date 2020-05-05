@@ -1,0 +1,4 @@
+com.github.j2a.springbootto.generators.MapStructMapperFromEntityGenerator
+com.github.j2a.springbootto.generators.ServiceInterfaceFromEntityGenerator
+com.github.j2a.springbootto.generators.SpringRepositoryFromEntityGenerator
+com.github.j2a.springbootto.generators.TOFromEntityGenerator

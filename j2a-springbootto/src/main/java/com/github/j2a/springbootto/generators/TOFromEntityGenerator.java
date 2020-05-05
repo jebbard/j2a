@@ -38,6 +38,7 @@ public class TOFromEntityGenerator implements Generator {
 	/**
 	 * @see com.github.j2a.core.generation.Generator#canGenerateResult(com.github.j2a.core.definition.JavaClassDefinition)
 	 */
+	@Override
 	public boolean canGenerateResult(JavaClassDefinition classDefinition) {
 		return false;
 	}
@@ -46,6 +47,7 @@ public class TOFromEntityGenerator implements Generator {
 	 * @see com.github.j2a.core.generation.Generator#generateResult(com.github.j2a.core.definition.JavaClassDefinition,
 	 *      com.github.j2a.core.generation.GenerationContext)
 	 */
+	@Override
 	public GeneratorResult generateResult(JavaClassDefinition classDefinition, GenerationContext context) {
 		JavaClassBuilder builder = JavaClassBuilder.createClass(new FullyQualifiedJavaTypeReference(
 			classDefinition.getName() + "TO", "org.mycollection.games.server.games.api"));
@@ -79,6 +81,7 @@ public class TOFromEntityGenerator implements Generator {
 	/**
 	 * @see com.github.j2a.core.generation.Generator#getDescription()
 	 */
+	@Override
 	public String getDescription() {
 		return null;
 	}
@@ -86,7 +89,8 @@ public class TOFromEntityGenerator implements Generator {
 	/**
 	 * @see com.github.j2a.core.generation.Generator#getName()
 	 */
+	@Override
 	public String getName() {
-		return null;
+		return "Generate flat Transport Object from JPA Entity";
 	}
 }

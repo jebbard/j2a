@@ -67,9 +67,11 @@ public class J2AContextMenuHandler extends AbstractHandler {
 			paths[0] = Paths.get("C:\\Programmieren\\08_GitProjekte\\runtime-EclipseApplication\\d\\target\\classes\\");
 			MessageDialog.openInformation(window.getShell(), "J2a-eclipse-plugin", Arrays.toString(paths));
 
-			Generator gen = new J2A().getGenerator("d.FDefaef", paths);
+			new J2A().getAllRegisteredGenerators();
 
-			System.out.println(gen.getName());
+//			Generator gen = new J2A().getGenerator("d.FDefaef", paths);
+
+//			System.out.println(gen.getName());
 		}
 
 		return null;

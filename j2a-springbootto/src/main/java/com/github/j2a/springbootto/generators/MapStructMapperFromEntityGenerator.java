@@ -36,6 +36,7 @@ public class MapStructMapperFromEntityGenerator implements Generator {
 	/**
 	 * @see com.github.j2a.core.generation.Generator#canGenerateResult(com.github.j2a.core.definition.JavaClassDefinition)
 	 */
+	@Override
 	public boolean canGenerateResult(JavaClassDefinition classDefinition) {
 		return false;
 	}
@@ -44,6 +45,7 @@ public class MapStructMapperFromEntityGenerator implements Generator {
 	 * @see com.github.j2a.core.generation.Generator#generateResult(com.github.j2a.core.definition.JavaClassDefinition,
 	 *      com.github.j2a.core.generation.GenerationContext)
 	 */
+	@Override
 	public GeneratorResult generateResult(JavaClassDefinition classDefinition, GenerationContext context) {
 		String entitySimpleName = classDefinition.getName();
 		JavaClassBuilder builder = JavaClassBuilder.createInterface(new FullyQualifiedJavaTypeReference(
@@ -69,6 +71,7 @@ public class MapStructMapperFromEntityGenerator implements Generator {
 	/**
 	 * @see com.github.j2a.core.generation.Generator#getDescription()
 	 */
+	@Override
 	public String getDescription() {
 		return null;
 	}
@@ -76,7 +79,8 @@ public class MapStructMapperFromEntityGenerator implements Generator {
 	/**
 	 * @see com.github.j2a.core.generation.Generator#getName()
 	 */
+	@Override
 	public String getName() {
-		return null;
+		return "Generate MapStruct Mapper from JPA Entity";
 	}
 }
