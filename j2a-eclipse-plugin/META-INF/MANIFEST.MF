@@ -8,7 +8,7 @@ Require-Bundle: org.eclipse.ui,
  org.eclipse.core.runtime,
  org.eclipse.jdt.core;bundle-version="3.21.0",
  org.eclipse.core.resources;bundle-version="3.13.700",
- j2a;bundle-version="1.0.0"
+ j2a-eclipse-plugin-library-wrapper;bundle-version="1.0.0"
 Bundle-RequiredExecutionEnvironment: JavaSE-12
 Automatic-Module-Name: j2a-eclipse-plugin
 Bundle-ActivationPolicy: lazy

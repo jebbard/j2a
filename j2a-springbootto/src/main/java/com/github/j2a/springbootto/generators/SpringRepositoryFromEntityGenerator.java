@@ -11,9 +11,8 @@ package com.github.j2a.springbootto.generators;
 
 import java.nio.file.Paths;
 
-import org.mycollection.games.server.games.impl.data.GameRelease;
-
 import com.github.j2a.core.definition.JavaClassDefinition;
+import com.github.j2a.core.generation.GenerationContext;
 import com.github.j2a.core.generation.Generator;
 import com.github.j2a.core.generation.GeneratorResult;
 import com.github.j2a.core.generation.J2A;
@@ -29,7 +28,7 @@ public class SpringRepositoryFromEntityGenerator implements Generator {
 	public static void main(String[] args) {
 		J2A j2a = new J2A();
 
-		j2a.generateOutputFromClass("org.mycollection.games.server", GameRelease.class, Paths.get("."),
+		j2a.generateOutputFromClass("org.mycollection.games.server", ClassText.GAME_RELEASE, Paths.get("."),
 			new SpringRepositoryFromEntityGenerator());
 	}
 
@@ -41,9 +40,10 @@ public class SpringRepositoryFromEntityGenerator implements Generator {
 	}
 
 	/**
-	 * @see com.github.j2a.core.generation.Generator#generateResult(com.github.j2a.core.definition.JavaClassDefinition)
+	 * @see com.github.j2a.core.generation.Generator#generateResult(com.github.j2a.core.definition.JavaClassDefinition,
+	 *      com.github.j2a.core.generation.GenerationContext)
 	 */
-	public GeneratorResult generateResult(JavaClassDefinition classDefinition) {
+	public GeneratorResult generateResult(JavaClassDefinition classDefinition, GenerationContext context) {
 		JavaClassBuilder builder = JavaClassBuilder.createInterface(new FullyQualifiedJavaTypeReference(
 			classDefinition.getName() + "Repository", "org.mycollection.games.server.games.impl.data"));
 

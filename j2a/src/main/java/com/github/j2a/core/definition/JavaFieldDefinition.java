@@ -33,10 +33,11 @@ public class JavaFieldDefinition extends AbstractScopedJavaElementDefinition {
 		setAnnotations(annotations);
 	}
 
-	public JavaFieldDefinition(JavaFieldDefinition other, String adaptedName, Class<?> adaptedType) {
-		this(other.isFinal(), adaptedName, other.getAnnotations(), other.getVisibility(), other.isStatic(),
-			other.isVolatile, other.isTransient(),
-			new JavaClassDefinition(adaptedType, false, "", null, false, null, false, "", false, false, false, false),
+	public JavaFieldDefinition(JavaFieldDefinition other, String adaptedName, Class<?> adaptedType,
+		List<JavaTypeReference> adaptedAnnotations) {
+		this(other.isFinal(), adaptedName, adaptedAnnotations, other.getVisibility(), other.isStatic(),
+			other.isVolatile, other.isTransient(), new JavaClassDefinition(null, false, adaptedType.getSimpleName(),
+				null, false, null, false, adaptedType.getPackageName(), false, false, false, false),
 			other.isSynthetic());
 	}
 

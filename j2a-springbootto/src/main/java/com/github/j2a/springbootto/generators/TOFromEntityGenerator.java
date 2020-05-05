@@ -10,8 +10,7 @@
 package com.github.j2a.springbootto.generators;
 
 import java.nio.file.Paths;
-
-import org.mycollection.games.server.games.impl.data.GameRelease;
+import java.util.ArrayList;
 
 import com.github.j2a.core.definition.JavaClassDefinition;
 import com.github.j2a.core.definition.JavaFieldDefinition;
@@ -32,7 +31,7 @@ public class TOFromEntityGenerator implements Generator {
 	public static void main(String[] args) {
 		J2A j2a = new J2A();
 
-		j2a.generateOutputFromClass("org.mycollection.games.server", GameRelease.class, Paths.get("."),
+		j2a.generateOutputFromClass("org.mycollection.games.server", ClassText.GAME_RELEASE, Paths.get("."),
 			new TOFromEntityGenerator());
 	}
 
@@ -48,8 +47,8 @@ public class TOFromEntityGenerator implements Generator {
 	 *      com.github.j2a.core.generation.GenerationContext)
 	 */
 	public GeneratorResult generateResult(JavaClassDefinition classDefinition, GenerationContext context) {
-		JavaClassBuilder builder = JavaClassBuilder.createClass(
-			new FullyQualifiedJavaTypeReference(classDefinition.getName() + "TO", "org.mycollection.games.server.games.api"));
+		JavaClassBuilder builder = JavaClassBuilder.createClass(new FullyQualifiedJavaTypeReference(
+			classDefinition.getName() + "TO", "org.mycollection.games.server.games.api"));
 
 		builder.withClassJavadoc("A transport object for " + classDefinition.getName() + " entities.")
 			.extending(new FullyQualifiedJavaTypeReference("org.mycollection.games.server.utils.AbstractTO"));
@@ -62,7 +61,7 @@ public class TOFromEntityGenerator implements Generator {
 
 					if (context.isApplicationClass(fieldType)) {
 						JavaFieldDefinition adaptedFieldDefinition = new JavaFieldDefinition(fieldDefinition,
-							fieldDefinition.getName() + "Id", Long.class);
+							fieldDefinition.getName() + "Id", Long.class, new ArrayList<>());
 
 						builder.withProperty(adaptedFieldDefinition);
 					}

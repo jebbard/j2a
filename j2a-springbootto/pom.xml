@@ -35,7 +35,7 @@
 		</dependency>
 		<dependency>
 			<groupId>com.github.j2a</groupId>
-			<artifactId>core</artifactId>
+			<artifactId>j2a-core</artifactId>
 			<version>0.0.1-SNAPSHOT</version>
 		</dependency>
 	</dependencies>

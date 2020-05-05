@@ -11,9 +11,8 @@ package com.github.j2a.springbootto.generators;
 
 import java.nio.file.Paths;
 
-import org.mycollection.games.server.games.impl.data.GameRelease;
-
 import com.github.j2a.core.definition.JavaClassDefinition;
+import com.github.j2a.core.generation.GenerationContext;
 import com.github.j2a.core.generation.Generator;
 import com.github.j2a.core.generation.GeneratorResult;
 import com.github.j2a.core.generation.J2A;
@@ -30,7 +29,7 @@ public class MapStructMapperFromEntityGenerator implements Generator {
 		J2A j2a = new J2A();
 
 		// TODO use Java parser for getting Java Class Decl
-		j2a.generateOutputFromClass("org.mycollection.games.server", GameRelease.class, Paths.get("."),
+		j2a.generateOutputFromClass("org.mycollection.games.server", ClassText.GAME_RELEASE, Paths.get("."),
 			new MapStructMapperFromEntityGenerator());
 	}
 
@@ -42,9 +41,10 @@ public class MapStructMapperFromEntityGenerator implements Generator {
 	}
 
 	/**
-	 * @see com.github.j2a.core.generation.Generator#generateResult(com.github.j2a.core.definition.JavaClassDefinition)
+	 * @see com.github.j2a.core.generation.Generator#generateResult(com.github.j2a.core.definition.JavaClassDefinition,
+	 *      com.github.j2a.core.generation.GenerationContext)
 	 */
-	public GeneratorResult generateResult(JavaClassDefinition classDefinition) {
+	public GeneratorResult generateResult(JavaClassDefinition classDefinition, GenerationContext context) {
 		String entitySimpleName = classDefinition.getName();
 		JavaClassBuilder builder = JavaClassBuilder.createInterface(new FullyQualifiedJavaTypeReference(
 			entitySimpleName + "Mapper", "org.mycollection.games.server.games.impl.facade"));
@@ -58,7 +58,8 @@ public class MapStructMapperFromEntityGenerator implements Generator {
 			.extending(new FullyQualifiedJavaTypeReference("org.mycollection.games.server.utils.MGCMapper"),
 				new FullyQualifiedJavaTypeReference(toName, classDefinition.getPackageName()),
 				new FullyQualifiedJavaTypeReference(entitySimpleName, classDefinition.getPackageName()))
-			.withAnnotation(new FullyQualifiedJavaTypeReference("org.mapstruct.Mapper")).withBodyComment("Intentionally empty");
+			.withAnnotation(new FullyQualifiedJavaTypeReference("org.mapstruct.Mapper"))
+			.withBodyComment("Intentionally empty");
 
 		System.out.println(builder.build());
 
