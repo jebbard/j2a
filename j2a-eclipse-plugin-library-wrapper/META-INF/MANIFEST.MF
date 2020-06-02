@@ -3,12 +3,31 @@ Bundle-ManifestVersion: 2
 Bundle-Name: J2a-eclipse-plugin-library-wrapper
 Bundle-SymbolicName: j2a-eclipse-plugin-library-wrapper
 Bundle-Version: 1.0.0
-Bundle-ClassPath: .,j2a-core-0.0.1-SNAPSHOT.jar,springbootto-0.0.1-SNAPSHOT.jar
+Bundle-ClassPath: .,j2a-core-0.0.1-SNAPSHOT.jar,springbootto-0.0.1-SNAPSHOT.jar,javaparser-symbol-solver-core-3.15.14.jar
 Export-Package: com.github.j2a.core.config,
  com.github.j2a.core.definition,
  com.github.j2a.core.generation,
  com.github.j2a.core.parser,
  com.github.j2a.core.template,
  com.github.j2a.core.utils,
- com.github.j2a.springbootto.generators
+ com.github.j2a.springbootto.generators,
+ com.github.javaparser.symbolsolver,
+ com.github.javaparser.symbolsolver.core.resolution,
+ com.github.javaparser.symbolsolver.declarations.common,
+ com.github.javaparser.symbolsolver.javaparser,
+ com.github.javaparser.symbolsolver.javaparsermodel,
+ com.github.javaparser.symbolsolver.javaparsermodel.contexts,
+ com.github.javaparser.symbolsolver.javaparsermodel.declarations,
+ com.github.javaparser.symbolsolver.javaparsermodel.declarators,
+ com.github.javaparser.symbolsolver.javassistmodel,
+ com.github.javaparser.symbolsolver.model.typesystem,
+ com.github.javaparser.symbolsolver.reflectionmodel,
+ com.github.javaparser.symbolsolver.reflectionmodel.comparators,
+ com.github.javaparser.symbolsolver.resolution,
+ com.github.javaparser.symbolsolver.resolution.naming,
+ com.github.javaparser.symbolsolver.resolution.typeinference,
+ com.github.javaparser.symbolsolver.resolution.typeinference.bounds,
+ com.github.javaparser.symbolsolver.resolution.typeinference.constraintformulas,
+ com.github.javaparser.symbolsolver.resolution.typesolvers,
+ com.github.javaparser.symbolsolver.utils
 Automatic-Module-Name: j2a-eclipse-plugin-library-wrapper
