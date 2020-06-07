@@ -61,7 +61,8 @@ public class CompilationUnitTypeResolver {
 		}
 
 		if (TypeReferenceHelper.isPrimitive(TypeReferenceHelper.getElementType(typeExpression))) {
-			return new FullyQualifiedJavaTypeReference(typeExpression, TypeReferenceHelper.JAVA_LANG, typeArgumentRefs);
+			return new FullyQualifiedJavaTypeReference(typeExpression, TypeReferenceHelper.JAVA_LANG, typeArgumentRefs,
+				true);
 		}
 
 		String typeFromImportList = getFromImportList(
@@ -72,19 +73,20 @@ public class CompilationUnitTypeResolver {
 		}
 
 		if (isTypeDeclaredInCompilationUnit(typeExpression)) {
-			return new FullyQualifiedJavaTypeReference(typeExpression, compilationUnitPackage, typeArgumentRefs);
+			return new FullyQualifiedJavaTypeReference(typeExpression, compilationUnitPackage, typeArgumentRefs, false);
 		}
 
 		if (typeParametersInScope.contains(TypeReferenceHelper.getElementType(typeExpression))) {
-			return new FullyQualifiedJavaTypeReference(typeExpression, compilationUnitPackage, typeArgumentRefs);
+			return new FullyQualifiedJavaTypeReference(typeExpression, compilationUnitPackage, typeArgumentRefs, false);
 		}
 
 		if (TypeReferenceHelper.isJavaLangClass(typeExpression)
 			|| TypeReferenceHelper.isJavaLangClass(TypeReferenceHelper.getElementType(typeExpression))) {
-			return new FullyQualifiedJavaTypeReference(typeExpression, TypeReferenceHelper.JAVA_LANG, typeArgumentRefs);
+			return new FullyQualifiedJavaTypeReference(typeExpression, TypeReferenceHelper.JAVA_LANG, typeArgumentRefs,
+				false);
 		}
 
-		return new FullyQualifiedJavaTypeReference(typeExpression, compilationUnitPackage, typeArgumentRefs);
+		return new FullyQualifiedJavaTypeReference(typeExpression, compilationUnitPackage, typeArgumentRefs, false);
 
 	}
 

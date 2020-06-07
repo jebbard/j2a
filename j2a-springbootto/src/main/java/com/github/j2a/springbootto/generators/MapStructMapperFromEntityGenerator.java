@@ -49,7 +49,7 @@ public class MapStructMapperFromEntityGenerator implements Generator {
 	public GeneratorResult generateResult(JavaClassDefinition classDefinition, GenerationContext context) {
 		String entitySimpleName = classDefinition.getName();
 		JavaClassBuilder builder = JavaClassBuilder.createInterface(new FullyQualifiedJavaTypeReference(
-			entitySimpleName + "Mapper", "org.mycollection.games.server.games.impl.facade"));
+			entitySimpleName + "Mapper", "org.mycollection.games.server.games.impl.facade", false));
 
 		// TODO derive TO package from entity package
 		String toName = entitySimpleName + "TO";
@@ -58,14 +58,15 @@ public class MapStructMapperFromEntityGenerator implements Generator {
 			.withClassJavadoc(
 				"A MapStruct mapper for mapping {@link " + entitySimpleName + "} entities to {@link " + toName + "}s.")
 			.extending(new FullyQualifiedJavaTypeReference("org.mycollection.games.server.utils.MGCMapper"),
-				new FullyQualifiedJavaTypeReference(toName, classDefinition.getPackageName()),
-				new FullyQualifiedJavaTypeReference(entitySimpleName, classDefinition.getPackageName()))
+				new FullyQualifiedJavaTypeReference(toName, classDefinition.getPackageName(), false),
+				new FullyQualifiedJavaTypeReference(entitySimpleName, classDefinition.getPackageName(), false))
 			.withAnnotation(new FullyQualifiedJavaTypeReference("org.mapstruct.Mapper"))
 			.withBodyComment("Intentionally empty");
 
-		System.out.println(builder.build());
+		String result = builder.build();
+		System.out.println(result);
 
-		return new GeneratorResult(null, null);
+		return new GeneratorResult(result, null);
 	}
 
 	/**

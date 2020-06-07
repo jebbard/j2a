@@ -47,16 +47,17 @@ public class SpringRepositoryFromEntityGenerator implements Generator {
 	@Override
 	public GeneratorResult generateResult(JavaClassDefinition classDefinition, GenerationContext context) {
 		JavaClassBuilder builder = JavaClassBuilder.createInterface(new FullyQualifiedJavaTypeReference(
-			classDefinition.getName() + "Repository", "org.mycollection.games.server.games.impl.data"));
+			classDefinition.getName() + "Repository", "org.mycollection.games.server.games.impl.data", false));
 
 		builder.withClassJavadoc("A repository for " + classDefinition.getName() + " entities.")
 			.extending(new FullyQualifiedJavaTypeReference("org.springframework.data.jpa.repository.JpaRepository"),
-				new FullyQualifiedJavaTypeReference(classDefinition.getName(), classDefinition.getPackageName()),
+				new FullyQualifiedJavaTypeReference(classDefinition.getName(), classDefinition.getPackageName(), false),
 				new FullyQualifiedJavaTypeReference("java.lang.Long"))
 			.withAnnotation(new FullyQualifiedJavaTypeReference("org.springframework.stereotype.Repository"))
 			.withBodyComment("Intentionally empty");
 
-		System.out.println(builder.build());
+		String result = builder.build();
+		System.out.println(result);
 
 		return new GeneratorResult(null, null);
 	}

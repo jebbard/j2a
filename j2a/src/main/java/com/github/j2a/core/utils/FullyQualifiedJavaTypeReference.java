@@ -22,9 +22,10 @@ public class FullyQualifiedJavaTypeReference implements JavaTypeReference {
 	private final String name;
 	private final String packageName;
 	private final List<JavaTypeReference> typeArguments = new ArrayList<>();
+	private final boolean isPrimitive;
 
 	public FullyQualifiedJavaTypeReference(Class<?> klass) {
-		this(klass.getSimpleName(), klass.getPackageName(), new ArrayList<>());
+		this(klass.getSimpleName(), klass.getPackageName(), new ArrayList<>(), false);
 	}
 
 	/**
@@ -46,13 +47,16 @@ public class FullyQualifiedJavaTypeReference implements JavaTypeReference {
 	 */
 	public FullyQualifiedJavaTypeReference(String fullyQualifiedClassName, List<JavaTypeReference> typeArguments) {
 		if (!TypeReferenceHelper.isValidJavaTypeReference(fullyQualifiedClassName)) {
-			throw new IllegalArgumentException("Not a valid Java fully qualified class name");
+			throw new IllegalArgumentException(
+				"Not a valid Java fully qualified class name: " + fullyQualifiedClassName);
 		}
 
 		name = TypeReferenceHelper
 			.getRawType(TypeReferenceHelper.getClassNameFromFullyQualified(fullyQualifiedClassName));
 
-		if (TypeReferenceHelper.isPrimitive(fullyQualifiedClassName)) {
+		isPrimitive = TypeReferenceHelper.isPrimitive(fullyQualifiedClassName);
+
+		if (isPrimitive) {
 			packageName = TypeReferenceHelper.JAVA_LANG;
 		} else {
 			packageName = TypeReferenceHelper.getPackageNameFromFullyQualified(fullyQualifiedClassName);
@@ -66,9 +70,10 @@ public class FullyQualifiedJavaTypeReference implements JavaTypeReference {
 	 *
 	 * @param className
 	 * @param packageName
+	 * @param isPrimitive TODO
 	 */
-	public FullyQualifiedJavaTypeReference(String className, String packageName) {
-		this(className, packageName, new ArrayList<>());
+	public FullyQualifiedJavaTypeReference(String className, String packageName, boolean isPrimitive) {
+		this(className, packageName, new ArrayList<>(), isPrimitive);
 	}
 
 	/**
@@ -78,12 +83,14 @@ public class FullyQualifiedJavaTypeReference implements JavaTypeReference {
 	 * @param className
 	 * @param packageName
 	 * @param typeArguments
+	 * @param isPrimitive   TODO
 	 */
-	public FullyQualifiedJavaTypeReference(String className, String packageName,
-		List<JavaTypeReference> typeArguments) {
+	public FullyQualifiedJavaTypeReference(String className, String packageName, List<JavaTypeReference> typeArguments,
+		boolean isPrimitive) {
 		name = TypeReferenceHelper.getRawType(className);
 		this.packageName = packageName;
 		this.typeArguments.addAll(typeArguments);
+		this.isPrimitive = isPrimitive;
 	}
 
 	@Override
@@ -107,5 +114,9 @@ public class FullyQualifiedJavaTypeReference implements JavaTypeReference {
 	@Override
 	public List<JavaTypeReference> getTypeArguments() {
 		return typeArguments;
+	}
+
+	public boolean isPrimitive() {
+		return isPrimitive;
 	}
 }

@@ -28,10 +28,16 @@ import com.github.j2a.core.utils.JavaClassBuilder;
  */
 public class TOFromEntityGenerator implements Generator {
 
+	private static final String errorText = "package d;\n" + "\n" + "public class EntExample {\n"
+		+ "	private String y;\n" + "	private int x;\n" + "	private Long test;\n" + "}\n";
+
 	public static void main(String[] args) {
 		J2A j2a = new J2A();
 
-		j2a.generateOutputFromClass("org.mycollection.games.server", ClassText.GAME_RELEASE, Paths.get("."),
+//		j2a.generateOutputFromClass("org.mycollection.games.server", ClassText.GAME_RELEASE, Paths.get("."),
+//			new TOFromEntityGenerator());
+
+		j2a.generateOutputFromClass("org.mycollection.games.server", TOFromEntityGenerator.errorText, Paths.get("."),
 			new TOFromEntityGenerator());
 	}
 
@@ -50,7 +56,7 @@ public class TOFromEntityGenerator implements Generator {
 	@Override
 	public GeneratorResult generateResult(JavaClassDefinition classDefinition, GenerationContext context) {
 		JavaClassBuilder builder = JavaClassBuilder.createClass(new FullyQualifiedJavaTypeReference(
-			classDefinition.getName() + "TO", "org.mycollection.games.server.games.api"));
+			classDefinition.getName() + "TO", "org.mycollection.games.server.games.api", false));
 
 		builder.withClassJavadoc("A transport object for " + classDefinition.getName() + " entities.")
 			.extending(new FullyQualifiedJavaTypeReference("org.mycollection.games.server.utils.AbstractTO"));
@@ -73,9 +79,10 @@ public class TOFromEntityGenerator implements Generator {
 			}
 		}
 
-		System.out.println(builder.build());
+		String result = builder.build();
+		System.out.println(result);
 
-		return new GeneratorResult(null, null);
+		return new GeneratorResult(result, null);
 	}
 
 	/**

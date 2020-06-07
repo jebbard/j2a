@@ -48,7 +48,7 @@ public class ServiceInterfaceFromEntityGenerator implements Generator {
 	public GeneratorResult generateResult(JavaClassDefinition classDefinition, GenerationContext context) {
 		String entitySimpleName = classDefinition.getName();
 		JavaClassBuilder builder = JavaClassBuilder.createInterface(new FullyQualifiedJavaTypeReference(
-			entitySimpleName + "Service", "org.mycollection.games.server.games.api"));
+			entitySimpleName + "Service", "org.mycollection.games.server.games.api", false));
 
 		String toSimpleName = entitySimpleName + "TO";
 		builder
@@ -59,9 +59,10 @@ public class ServiceInterfaceFromEntityGenerator implements Generator {
 			.withSingleParamPublicMethod(toSimpleName, "save" + entitySimpleName, toSimpleName,
 				entitySimpleName.toLowerCase(), null);
 
-		System.out.println(builder.build());
+		String result = builder.build();
+		System.out.println(result);
 
-		return new GeneratorResult(null, null);
+		return new GeneratorResult(result, null);
 	}
 
 	/**

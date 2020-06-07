@@ -10,7 +10,9 @@
 package com.github.j2a.core.utils;
 
 import java.util.ArrayList;
+import java.util.LinkedHashSet;
 import java.util.List;
+import java.util.Set;
 import java.util.regex.Pattern;
 
 import com.github.j2a.core.definition.JavaFieldDefinition;
@@ -53,7 +55,7 @@ public class JavaClassBuilder {
 
 	private final List<MethodDeclaration> methods = new ArrayList<>();
 
-	private final List<String> importStatements = new ArrayList<>();
+	private final Set<String> importStatements = new LinkedHashSet<>();
 
 	private final ClassOrInterfaceDeclaration jpDeclaration;
 
@@ -83,7 +85,7 @@ public class JavaClassBuilder {
 	public JavaClassBuilder extending(FullyQualifiedJavaTypeReference extendedClass,
 		FullyQualifiedJavaTypeReference... extendedClassTypeArgs) {
 		jpDeclaration.addExtendedType(extendedClass.getName());
-		importStatements.add(extendedClass.getFullyQualifiedName());
+		updateImports(extendedClass);
 
 		if (extendedClassTypeArgs.length > 0) {
 			List<Type> typeArguments = new ArrayList<>();
@@ -91,7 +93,7 @@ public class JavaClassBuilder {
 			for (FullyQualifiedJavaTypeReference extendedClassTypeArg : extendedClassTypeArgs) {
 				typeArguments
 					.add(new JavaParser().parseClassOrInterfaceType(extendedClassTypeArg.getName()).getResult().get());
-				importStatements.add(extendedClassTypeArg.getFullyQualifiedName());
+				updateImports(extendedClassTypeArg);
 			}
 			jpDeclaration.getExtendedTypes(0).setTypeArguments(new NodeList<>(typeArguments));
 		}
@@ -101,7 +103,7 @@ public class JavaClassBuilder {
 
 	public JavaClassBuilder withAnnotation(FullyQualifiedJavaTypeReference annotation) {
 		jpDeclaration.addAnnotation(annotation.getName());
-		importStatements.add(annotation.getFullyQualifiedName());
+		updateImports(annotation);
 
 		return this;
 	}
@@ -121,7 +123,7 @@ public class JavaClassBuilder {
 	public JavaClassBuilder withProperty(JavaFieldDefinition fieldForProperty) {
 		jpDeclaration.addField(fieldForProperty.getType().getName(), fieldForProperty.getName(),
 			fieldForProperty.getVisibility().toJavaParserKeyword());
-		importStatements.add(fieldForProperty.getType().getFullyQualifiedName());
+		updateImports(new FullyQualifiedJavaTypeReference(fieldForProperty.getType().getFullyQualifiedName()));
 		methods.add(createGetter(fieldForProperty));
 		methods.add(createSetter(fieldForProperty));
 
@@ -151,7 +153,7 @@ public class JavaClassBuilder {
 		getter.setName(new SimpleName("get" + CaseHelper.toCapitalCase(fieldDefinition.getName())));
 		getter.setModifiers(Keyword.PUBLIC);
 		getter.setType(fieldDefinition.getType().getName());
-		importStatements.add(fieldDefinition.getType().getFullyQualifiedName());
+		updateImports(new FullyQualifiedJavaTypeReference(fieldDefinition.getType().getFullyQualifiedName()));
 		getter.setBody(new BlockStmt(new NodeList<>(new ReturnStmt(fieldDefinition.getName()))));
 
 		return getter;
@@ -163,12 +165,18 @@ public class JavaClassBuilder {
 		setter.setName(new SimpleName("set" + CaseHelper.toCapitalCase(fieldDefinition.getName())));
 		setter.setModifiers(Keyword.PUBLIC);
 		setter.addParameter(fieldDefinition.getType().getName(), fieldDefinition.getName());
-		importStatements.add(fieldDefinition.getType().getFullyQualifiedName());
+		updateImports(new FullyQualifiedJavaTypeReference(fieldDefinition.getType().getFullyQualifiedName()));
 		setter.setType(new VoidType());
 		setter.setBody(new BlockStmt(new NodeList<>(
 			new ExpressionStmt(new AssignExpr(new FieldAccessExpr(new ThisExpr(), fieldDefinition.getName()),
 				new NameExpr(fieldDefinition.getName()), Operator.ASSIGN)))));
 
 		return setter;
+	}
+
+	private void updateImports(FullyQualifiedJavaTypeReference typeRef) {
+		if (!typeRef.isPrimitive()) {
+			importStatements.add(typeRef.getFullyQualifiedName());
+		}
 	}
 }

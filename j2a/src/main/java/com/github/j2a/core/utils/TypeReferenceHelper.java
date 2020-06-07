@@ -213,7 +213,17 @@ public class TypeReferenceHelper {
 	}
 
 	public static boolean isPrimitive(String className) {
-		return TypeReferenceHelper.PRIMITIVES.contains(className);
+
+		if (TypeReferenceHelper.PRIMITIVES.contains(className)) {
+			return true;
+		}
+
+		if (className.startsWith(TypeReferenceHelper.JAVA_LANG) && TypeReferenceHelper.PRIMITIVES.contains(
+			className.replaceAll(TypeReferenceHelper.JAVA_LANG + TypeReferenceHelper.PACKAGE_SEGMENT_SEPARATOR, ""))) {
+			return true;
+		}
+
+		return false;
 	}
 
 	public static boolean isTypeReferenceFullyQualified(String typeReference) {
@@ -226,16 +236,16 @@ public class TypeReferenceHelper {
 			throw new IllegalArgumentException();
 		}
 
-		if (TypeReferenceHelper.PRIMITIVES.contains(typeReference)) {
+		if (TypeReferenceHelper.isPrimitive(typeReference)) {
 			return true;
 		}
 
 		for (int i = 0; i < typeReference.length(); ++i) {
 			char ch = typeReference.charAt(i);
 
-			if (!Character.isLetter(ch) && ch != '_' && ch != '$' && ch != TypeReferenceHelper.PACKAGE_SEGMENT_SEPARATOR
-				&& ch != TypeReferenceHelper.ARRAY_START_BRACKET && ch != TypeReferenceHelper.ARRAY_END_BRACKET
-				&& ch != TypeReferenceHelper.TYPE_ARGUMENT_START_BRACKET
+			if (!Character.isLetter(ch) && !Character.isDigit(ch) && ch != '_' && ch != '$'
+				&& ch != TypeReferenceHelper.PACKAGE_SEGMENT_SEPARATOR && ch != TypeReferenceHelper.ARRAY_START_BRACKET
+				&& ch != TypeReferenceHelper.ARRAY_END_BRACKET && ch != TypeReferenceHelper.TYPE_ARGUMENT_START_BRACKET
 				&& ch != TypeReferenceHelper.TYPE_ARGUMENT_END_BRACKET) {
 				return false;
 			}
@@ -245,6 +255,10 @@ public class TypeReferenceHelper {
 
 		for (String segment : packageSegments) {
 			if (TypeReferenceHelper.JAVA_KEYWORDS.contains(segment)) {
+				return false;
+			}
+
+			if (Character.isDigit(segment.charAt(0))) {
 				return false;
 			}
 		}
