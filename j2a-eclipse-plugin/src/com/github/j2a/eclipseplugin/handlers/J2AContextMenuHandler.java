@@ -1,12 +1,10 @@
 package com.github.j2a.eclipseplugin.handlers;
 
 import java.io.BufferedReader;
+import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStreamReader;
-import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 
 import org.eclipse.core.commands.AbstractHandler;
 import org.eclipse.core.commands.ExecutionEvent;
@@ -14,17 +12,8 @@ import org.eclipse.core.commands.ExecutionException;
 import org.eclipse.core.resources.IFile;
 import org.eclipse.core.resources.IResource;
 import org.eclipse.core.runtime.CoreException;
-import org.eclipse.jdt.core.IClasspathEntry;
+import org.eclipse.core.runtime.IPath;
 import org.eclipse.jdt.core.ICompilationUnit;
-import org.eclipse.jdt.core.IJavaProject;
-import org.eclipse.jdt.core.JavaCore;
-import org.eclipse.jdt.core.JavaModelException;
-import org.eclipse.jdt.core.search.IJavaSearchConstants;
-import org.eclipse.jdt.core.search.SearchEngine;
-import org.eclipse.jdt.core.search.SearchMatch;
-import org.eclipse.jdt.core.search.SearchParticipant;
-import org.eclipse.jdt.core.search.SearchPattern;
-import org.eclipse.jdt.core.search.SearchRequestor;
 import org.eclipse.jface.dialogs.MessageDialog;
 import org.eclipse.jface.viewers.IStructuredSelection;
 import org.eclipse.ui.ISelectionService;
@@ -92,56 +81,17 @@ public class J2AContextMenuHandler extends AbstractHandler {
 			MessageDialog.openInformation(window.getShell(), "J2a-eclipse-plugin", result.getOutput());
 		}
 
-		return null;
-	}
+		IPath makeAbsolute = file.getLocation().removeLastSegments(1).makeRelative();
+		MessageDialog.openInformation(window.getShell(), "J2a-eclipse-plugin", makeAbsolute.toString());
 
-	/**
-	 * @param resources
-	 * @return
-	 */
-	private Map<IJavaProject, IClasspathEntry[]> getProjectClasspaths(List<IResource> resources) {
-		Map<IJavaProject, IClasspathEntry[]> classPathEntryMap = new HashMap<>();
-
-		for (IResource resource : resources) {
-			IJavaProject javaProject = JavaCore.create(resource.getProject());
-
-			if (!classPathEntryMap.containsKey(javaProject)) {
-				IClasspathEntry[] classPathEntries;
-				try {
-					classPathEntries = javaProject.getResolvedClasspath(false);
-				} catch (JavaModelException e) {
-					throw new RuntimeException("Unexpected java model exception", e);
-				}
-
-				classPathEntryMap.put(javaProject, classPathEntries);
-			}
-		}
-		return classPathEntryMap;
-	}
-
-	/**
-	 * @return
-	 */
-	private List<IResource> getResourcesInWorkspaceImplementing(String fullyQualifiedInterfaceName) {
-		SearchPattern pattern = SearchPattern.createPattern(fullyQualifiedInterfaceName, IJavaSearchConstants.TYPE,
-			IJavaSearchConstants.IMPLEMENTORS, SearchPattern.R_EQUIVALENT_MATCH);
-
-		SearchEngine engine = new SearchEngine();
-
-		List<IResource> resources = new ArrayList<>();
+		IFile outputFile = file.getProject().getFolder(makeAbsolute).getFile("TEST.txt");
 
 		try {
-			engine.search(pattern, new SearchParticipant[] { SearchEngine.getDefaultSearchParticipant() },
-				SearchEngine.createWorkspaceScope(), new SearchRequestor() {
-
-					@Override
-					public void acceptSearchMatch(SearchMatch match) throws CoreException {
-						resources.add(match.getResource());
-					}
-				}, null);
+			outputFile.create(new ByteArrayInputStream(new byte[] { 'A', 'B', 'B', 'A' }), IResource.NONE, null);
 		} catch (CoreException e) {
-			throw new RuntimeException("Could not complete search", e);
+			throw new RuntimeException("fff", e);
 		}
-		return resources;
+
+		return null;
 	}
 }
